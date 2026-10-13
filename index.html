@@ -1,0 +1,1815 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portefeuille Bricks</title>
+<meta name="description" content="Suivi de portefeuille Bricks. Vos données restent dans votre navigateur.">
+<meta name="theme-color" content="#0a1a2b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Portefeuille">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; -webkit-text-size-adjust: 100%; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<style>
+  /* Relevé de compte : bandeau d'en-tête, bandeau de chiffres à filets, puis cartes en grille */
+  /* Interface sombre en permanence, à l'image de l'application Bricks :
+     une seule palette, quel que soit le thème de l'appareil. */
+  :root {
+    --bg: #0a1a2b; --panel: #13293f; --panel-2: #183049;
+    --ink: #eef4fa; --muted: #93a9c0; --line: #244159;
+    --accent: #f2703a; --accent-soft: #35211a; --on-accent: #ffffff; --figure: #f8d7b6;
+    --s1: #f2703a; --s2: #d8a24a; --s3: #6fd3a8; --s4: #7a8ea3; --s5: #6f9fd8;
+    --ok: #6fd3a8; --warn: #d8a24a; --bad: #e8775c;
+    --grid: #1b344d; --shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 10px 28px -18px rgba(0, 0, 0, .8);
+    --radius: 10px;
+    --ui: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --num: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --disp: 'Newsreader', Iowan Old Style, Georgia, serif;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg) linear-gradient(180deg, rgba(43, 96, 148, .30), rgba(10, 26, 43, 0) 520px) no-repeat;
+    color: var(--ink); font-family: var(--ui); font-size: 15px; line-height: 1.5;
+  }
+  .app { max-width: 76rem; margin-inline: auto; padding-inline: 16px; padding-block: 28px 56px; }
+  h1, h2, h3 { margin: 0; font-weight: 500; }
+  .num { font-family: var(--num); font-variant-numeric: tabular-nums; }
+
+  /* en-tête */
+  .hd { display: flex; flex-wrap: wrap; gap: var(--radius) 20px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+  .hd-l { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .hd h1 { font-family: var(--disp); font-weight: 400; font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); letter-spacing: -.01em; text-wrap: balance; }
+  .hd h1 .brand { color: var(--accent); }
+  .hd-meta { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+  .hd-meta b { font-weight: 500; color: var(--ink); }
+  .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--line); }
+  .stale { color: var(--warn); }
+  .hd-r { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .btn { appearance: none; font: inherit; font-size: .85rem; border-radius: 8px; padding: 7px 14px; cursor: pointer;
+         border: 1px solid var(--line); background: var(--panel); color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
+  .btn:hover { border-color: var(--muted); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn[data-v="primary"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .btn[data-v="danger"] { color: var(--muted); }
+  .btn[data-v="danger"]:hover { color: var(--bad); border-color: var(--bad); }
+  .btn[disabled] { opacity: .5; cursor: default; }
+  .btn svg { width: 14px; height: 14px; flex: none; }
+
+  /* bandeau de notification */
+  .flash { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 20px;
+           background: var(--panel); font-size: .88rem; display: flex; gap: 12px; align-items: flex-start; }
+  .flash[data-k="err"] { border-color: var(--bad); }
+  .flash[data-k="ok"] { border-color: var(--ok); }
+  .flash-t { flex: 1; min-width: 0; }
+  .flash-t b { font-weight: 500; }
+  .flash .btn { padding: 4px 10px; }
+  .flash-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+  /* bandeau de chiffres */
+  .ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+            gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius);
+            overflow: hidden; box-shadow: var(--shadow); margin-bottom: 28px; }
+  .cell { background: var(--panel); padding: 14px 16px 15px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .cell-l { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .cell-v { font-family: var(--disp); font-weight: 400; font-size: 1.6rem; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--figure); }
+  .cell-n { font-size: .76rem; color: var(--muted); }
+  .cell-n b { font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* onglets */
+  .tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted);
+         font: inherit; font-size: .9rem; padding: 8px 12px; cursor: pointer; margin-bottom: -1px; }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px 6px 0 0; }
+
+  .sec { margin-bottom: 32px; }
+  .sec-h { margin-bottom: 14px; display: flex; flex-direction: column; gap: 3px; }
+  .sec-h h2 { font-family: var(--disp); font-weight: 400; font-size: 1.3rem; }
+  .sec-h p { margin: 0; color: var(--muted); font-size: .86rem; max-width: 72ch; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
+          display: flex; flex-direction: column; gap: 10px; min-width: 0; position: relative; }
+  .card-h { display: flex; flex-direction: column; gap: 2px; }
+  .card-h h3 { font-size: .95rem; }
+  .card-h span { font-size: .78rem; color: var(--muted); }
+  .chart { width: 100%; min-width: 0; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .76rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+  /* tableaux */
+  .twrap { overflow: auto; max-height: 30rem; margin-inline: -16px; padding-inline: 16px; }
+  .twrap[data-h="auto"] { max-height: none; }
+  table.t { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  table.t th, table.t td { text-align: right; padding: 7px 10px; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  table.t th:first-child, table.t td:first-child { text-align: left; white-space: normal; min-width: 11rem; padding-left: 0; }
+  table.t th:last-child, table.t td:last-child { padding-right: 0; }
+  table.t thead th { position: sticky; top: 0; background: var(--panel); color: var(--muted); font-weight: 500;
+                     font-size: .74rem; letter-spacing: .03em; text-transform: uppercase; z-index: 1; }
+  table.t thead th button { appearance: none; background: none; border: 0; color: inherit; font: inherit; cursor: pointer;
+                            padding: 0; display: inline-flex; gap: 4px; align-items: center; }
+  table.t thead th[aria-sort] button { color: var(--ink); }
+  table.t thead th button::after { content: ''; width: 0; }
+  table.t thead th[aria-sort="ascending"] button::after { content: '↑'; }
+  table.t thead th[aria-sort="descending"] button::after { content: '↓'; }
+  table.t tbody tr:last-child td { border-bottom: 0; }
+  table.t tbody tr:hover td { background: var(--panel-2); }
+  .cnum { font-family: var(--num); font-variant-numeric: tabular-nums; }
+  .neg { color: var(--bad); }
+  .bar { position: relative; display: inline-block; height: 6px; width: 3.5rem; border-radius: 3px; background: var(--grid); overflow: hidden; vertical-align: middle; }
+  .bar i { position: absolute; inset: 0 auto 0 0; display: block; border-radius: 3px; background: var(--s1); }
+  .bar i[data-full="1"] { background: var(--ok); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .74rem; border: 1px solid var(--line); color: var(--muted); }
+  .pill[data-k="ok"] { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
+  .pill[data-k="warn"] { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .tools input, .tools select { font: inherit; font-size: .82rem; padding: 6px 10px; border: 1px solid var(--line);
+      border-radius: 8px; background: var(--panel-2); color: var(--ink); min-width: 0; }
+  .tools input { flex: 1 1 11rem; }
+  .tools input:focus-visible, .tools select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* Sélecteur de période : segments façon barre de choix */
+  .seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 999px;
+         background: var(--panel-2); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+  .seg button { appearance: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: .78rem;
+                padding: 5px 11px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Interrupteur brut / net */
+  .switch { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
+  .switch-l { font-size: .82rem; color: var(--ink); }
+  .switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .track { position: relative; width: 44px; height: 26px; flex: none; border-radius: 999px;
+           background: var(--line); transition: background .2s ease; }
+  .thumb { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+           background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .45); transition: transform .2s ease; }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track .thumb { transform: translateX(18px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .track, .thumb { transition: none; } }
+
+  .field { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--muted); }
+  .field input { width: 5.5rem; flex: none; font: inherit; font-size: .82rem; padding: 6px 8px; text-align: right;
+                 border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--ink);
+                 font-variant-numeric: tabular-nums; }
+  .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .field i { font-style: normal; color: var(--muted); margin-left: -3px; }
+
+  .total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .total-v { font-family: var(--disp); font-weight: 400; font-size: 1.5rem; line-height: 1.1;
+             color: var(--figure); font-variant-numeric: tabular-nums; }
+  .total-l { font-size: .8rem; color: var(--muted); }
+  .count { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  p.count { margin: 6px 0 0; }
+  .ledger + .card { margin-top: 16px; }
+
+  .tip { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+         box-shadow: var(--shadow); padding: 7px 10px; font-size: .78rem; pointer-events: none; opacity: 0; z-index: 5; white-space: nowrap; }
+  .tip-d { color: var(--muted); margin-bottom: 3px; }
+  .tip-r { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+
+  dl.note { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 4px 16px; margin: 0 0 12px; font-size: .86rem; }
+  dl.note:last-child { margin-bottom: 0; }
+  dl.note dt { font-weight: 500; }
+  dl.note dd { margin: 0; color: var(--muted); }
+  @media (max-width: 34rem) { dl.note { grid-template-columns: 1fr; } }
+
+  /* état vide */
+  .empty { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+           padding: 44px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .empty-m { width: 44px; height: 44px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
+             display: grid; place-items: center; }
+  .empty-m svg { width: 22px; height: 22px; }
+  .empty h2 { font-family: var(--disp); font-weight: 400; font-size: 1.4rem; }
+  .empty p { margin: 0; color: var(--muted); max-width: 46ch; font-size: .9rem; }
+  .empty code { font-family: var(--num); font-size: .82em; background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+
+  .skel { display: inline-block; min-width: 3.5rem; height: .85em; border-radius: 4px; background: var(--grid); color: transparent; }
+  .foot { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: no-preference) {
+    .rise { animation: rise .45s cubic-bezier(.2, .7, .3, 1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<div class="app">
+  <header class="hd">
+    <div class="hd-l">
+      <h1>Portefeuille <span class="brand">Bricks</span></h1>
+      <div class="hd-meta" id="meta"><span class="skel">&nbsp;</span></div>
+    </div>
+    <div class="hd-r" id="actions" hidden>
+      <button class="btn" data-v="primary" id="btn-import" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        Importer un export
+      </button>
+      <button class="btn" data-v="danger" id="btn-reset" type="button" hidden>Réinitialiser</button>
+    </div>
+  </header>
+
+  <div class="flash" id="flash" hidden>
+    <div class="flash-t" id="flash-t"></div>
+  </div>
+
+  <div id="vide" hidden>
+    <div class="empty">
+      <div class="empty-m">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M6 20V10m4 10V5m4 15v-8m4 8V8"/></svg>
+      </div>
+      <h2 id="vide-titre">Chargement de votre portefeuille</h2>
+      <p>Téléchargez l’historique de vos transactions depuis votre espace Bricks, puis déposez le fichier ici. Les formats <code>.xlsx</code> et <code>.csv</code> sont acceptés.</p>
+      <p>Le fichier est lu par votre navigateur et n’est envoyé nulle part. Les données restent sur cet appareil, dans ce navigateur.</p>
+      <button class="btn" data-v="primary" id="btn-import-2" type="button">Importer un export</button>
+      <p id="vide-note"></p>
+    </div>
+  </div>
+
+  <div id="corps" hidden>
+    <div class="ledger" id="ledger">
+      <div class="cell"><div class="cell-l">Capital investi</div><div class="cell-v" data-f="encours">—</div><div class="cell-n">total placé moins capital remboursé</div></div>
+      <div class="cell"><div class="cell-l">Total placé</div><div class="cell-v" data-f="capital_investi">—</div><div class="cell-n">sur <b data-f="nb_projets">—</b> projets</div></div>
+      <div class="cell"><div class="cell-l">Revenus nets encaissés</div><div class="cell-v" data-f="encaisse_net">—</div><div class="cell-n">après <b data-f="prelevement_source">—</b> d’impôt · dont <b data-f="bonus">—</b> de primes</div></div>
+      <div class="cell"><div class="cell-l">TRI net annualisé</div><div class="cell-v" data-f="tri_net">—</div><div class="cell-n"><b data-f="tri_brut">—</b> avant impôt</div></div>
+      <div class="cell"><div class="cell-l">Capital remboursé</div><div class="cell-v" data-f="capital_rembourse">—</div><div class="cell-n"><b data-f="nb_rembourses">—</b> projets soldés</div></div>
+      <div class="cell"><div class="cell-l">Projets en cours</div><div class="cell-v" data-f="nb_actifs">—</div><div class="cell-n">ticket moyen <b data-f="ticket_moyen">—</b></div></div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Vues du portefeuille">
+      <button class="tab" role="tab" id="tab-vue" aria-controls="p-vue" aria-selected="true" type="button">Vue d’ensemble</button>
+      <button class="tab" role="tab" id="tab-projets" aria-controls="p-projets" aria-selected="false" type="button">Projets</button>
+      <button class="tab" role="tab" id="tab-projection" aria-controls="p-projection" aria-selected="false" type="button">Projection</button>
+      <button class="tab" role="tab" id="tab-ops" aria-controls="p-ops" aria-selected="false" type="button">Opérations</button>
+      <button class="tab" role="tab" id="tab-methode" aria-controls="p-methode" aria-selected="false" type="button">Méthode</button>
+    </nav>
+
+    <div id="p-vue" role="tabpanel" aria-labelledby="tab-vue">
+      <section class="sec">
+        <div class="sec-h">
+          <h2>Le capital, mois par mois</h2>
+          <p>Ce que la plateforme n’affiche pas : la part du capital déjà revenue dans le wallet, et donc le montant réellement exposé.</p>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-h"><h3>Capital placé, remboursé, investi</h3><span id="sub-capital">Cumuls depuis le premier investissement</span></div>
+            <div class="chart" id="c-capital" style="min-height:240px"></div>
+            <div class="legend" id="l-capital"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Revenus encaissés par mois</h3><span>Loyers, intérêts et primes encaissés, par provenance</span></div>
+            <div class="tools">
+              <div class="seg" id="seg-periode" role="group" aria-label="Période affichée">
+                <button type="button" data-p="3" aria-pressed="false">3 mois</button>
+                <button type="button" data-p="6" aria-pressed="false">6 mois</button>
+                <button type="button" data-p="ytd" id="seg-ytd" aria-pressed="false">Année</button>
+                <button type="button" data-p="12" aria-pressed="true">12 mois</button>
+                <button type="button" data-p="all" aria-pressed="false">Tout</button>
+              </div>
+              <label class="switch">
+                <span class="switch-l">Net d’impôt</span>
+                <input type="checkbox" id="f-net" role="switch" checked>
+                <span class="track" aria-hidden="true"><span class="thumb"></span></span>
+              </label>
+            </div>
+            <div class="total">
+              <div class="total-v" id="rev-total">—</div>
+              <div class="total-l" id="rev-label"></div>
+            </div>
+            <div class="chart" id="c-revenus" style="min-height:240px"></div>
+            <div class="legend" id="l-revenus"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-h">
+          <h2>Par type de contrat</h2>
+          <p>Obligation, prêt et royalty ne se comportent pas pareil. Le rendement brut rapporte les revenus perçus au capital placé, sans tenir compte du temps : à durées différentes, deux lignes ne sont pas comparables sur ce chiffre.</p>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-h"><h3>Répartition et rendement</h3><span>Mêmes colonnes que le portefeuille</span></div>
+            <div class="twrap" data-h="auto">
+              <table class="t" id="t-contrats">
+                <thead><tr>
+                  <th data-k="contrat">Contrat</th><th data-k="nb_projets">Projets</th><th data-k="investi">Placé</th>
+                  <th data-k="encours">Investi</th><th data-k="revenus">Revenus</th><th data-k="rendement_brut">Rdt brut</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Capital investi par contrat</h3><span>En euros</span></div>
+            <div class="chart" id="c-contrats" style="min-height:150px"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-h">
+          <h2>Points de vigilance</h2>
+          <p>Projets non soldés dont le versement attendu n’est pas arrivé. Pour une obligation remboursable in fine, le silence est normal ; pour un projet qui versait chaque mois, il ne l’est pas.</p>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Les retards les plus anciens</h3><span id="sub-vigilance"></span></div>
+          <div class="twrap" data-h="auto">
+            <table class="t" id="t-vigilance">
+              <thead><tr>
+                <th data-k="projet">Projet</th><th data-k="contrat">Contrat</th><th data-k="mois_retard">Mois de retard</th>
+                <th data-k="encours">Investi</th><th data-k="dernier_revenu">Dernier versement</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="count" id="note-vigilance"></p>
+        </div>
+      </section>
+    </div>
+
+    <div id="p-projets" role="tabpanel" aria-labelledby="tab-projets" hidden>
+      <section class="sec" id="sec-retard">
+        <div class="sec-h">
+          <h2>Versements en retard</h2>
+          <p>Projets non soldés dont le prochain versement aurait dû arriver. Le rythme attendu est celui du projet lui-même : l’écart médian entre ses versements passés, plus une tolérance d’un demi-cycle. Un projet qui paie au trimestre n’est donc pas signalé au bout d’un mois.</p>
+        </div>
+        <div class="ledger">
+          <div class="cell"><div class="cell-l">Projets en retard</div><div class="cell-v" data-f="nb_retard">—</div><div class="cell-n">sur <b data-f="nb_actifs">—</b> projets en cours</div></div>
+          <div class="cell"><div class="cell-l">Capital concerné</div><div class="cell-v" data-f="encours_retard">—</div><div class="cell-n">capital investi dans ces projets</div></div>
+          <div class="cell"><div class="cell-l">Revenus non perçus</div><div class="cell-v" data-f="manque_total">—</div><div class="cell-n">estimation au rythme habituel de chaque projet</div></div>
+          <div class="cell"><div class="cell-l">Retard le plus ancien</div><div class="cell-v" data-f="retard_max_mois">—</div><div class="cell-n" data-f="retard_max_projet">—</div></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="tools">
+            <input id="q-retard" type="search" placeholder="Filtrer par nom de projet…" aria-label="Filtrer les projets en retard">
+            <span class="count" id="n-retard"></span>
+          </div>
+          <div class="twrap" data-h="auto">
+            <table class="t" id="t-retard">
+              <thead><tr>
+                <th data-k="projet">Projet</th><th data-k="mois_retard">Mois de retard</th>
+                <th data-k="encours">Capital investi</th><th data-k="manque_a_gagner">Revenus non perçus</th>
+                <th data-k="dernier_revenu">Dernier versement</th><th data-k="cadence_jours">Rythme habituel</th>
+                <th data-k="retard_base">Mesure</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="count" id="note-retard"></p>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-h">
+          <h2>Qui rapporte, qui dort</h2>
+          <p>Le TRI d’un projet tient compte de la date de chaque versement et valorise le capital non remboursé à son montant nominal.</p>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-h"><h3>12 projets les plus rémunérateurs</h3><span>Revenus perçus depuis l’entrée</span></div>
+            <div class="chart" id="c-top" style="min-height:320px"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>TRI selon la durée de détention</h3><span>Un point par projet ; la taille marque le capital placé</span></div>
+            <div class="chart" id="c-tri" style="min-height:320px"></div>
+            <div class="legend" id="l-tri"></div>
+          </div>
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><h2>Tous les projets</h2><p>Cliquez un en-tête pour trier, tapez pour filtrer.</p></div>
+        <div class="card">
+          <div class="tools">
+            <input id="q-projets" type="search" placeholder="Filtrer par nom de projet…" aria-label="Filtrer les projets">
+            <select id="f-projets" aria-label="Filtrer par état">
+              <option value="">Tous les états</option>
+              <option value="En cours">En cours</option>
+              <option value="Partiel">Remboursement partiel</option>
+              <option value="Remboursé">Remboursé</option>
+            </select>
+            <span class="count" id="n-projets"></span>
+          </div>
+          <div class="twrap">
+            <table class="t" id="t-projets">
+              <thead><tr>
+                <th data-k="projet">Projet</th><th data-k="contrat">Contrat</th><th data-k="investi">Placé</th>
+                <th data-k="capital_rembourse">Remboursé</th><th data-k="pct_rembourse">Part</th>
+                <th data-k="revenus">Revenus</th><th data-k="rendement_brut">Rdt brut</th><th data-k="tri">TRI</th>
+                <th data-k="nb_versements">Versements</th><th data-k="jours_detention">Jours</th><th data-k="statut">État</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="p-projection" role="tabpanel" aria-labelledby="tab-projection" hidden>
+      <section class="sec">
+        <div class="sec-h">
+          <h2>Projection des revenus</h2>
+          <p>Ce que votre portefeuille rapporterait si le rendement constaté ces douze derniers mois se maintenait. Ce n’est pas une prévision : l’export ne contient ni taux promis, ni échéance, ni durée de projet. Les primes de parrainage sont exclues, elles ne dépendent pas du capital placé.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h3>Hypothèses</h3><span>Modifiez-les pour tester un scénario</span></div>
+          <div class="tools">
+            <div class="seg" id="seg-horizon" role="group" aria-label="Horizon de projection">
+              <button type="button" data-h="12" aria-pressed="true">12 mois</button>
+              <button type="button" data-h="24" aria-pressed="false">24 mois</button>
+              <button type="button" data-h="36" aria-pressed="false">36 mois</button>
+              <button type="button" data-h="60" aria-pressed="false">5 ans</button>
+            </div>
+          </div>
+          <div class="tools">
+            <label class="field"><span>Rendement brut annuel</span><input type="number" id="p-taux" min="0" max="40" step="0.1"><i>%</i></label>
+            <label class="field"><span>Apport mensuel</span><input type="number" id="p-apport" min="0" max="100000" step="10" value="0"><i>€</i></label>
+            <label class="switch">
+              <span class="switch-l">Réinvestir les revenus</span>
+              <input type="checkbox" id="p-reinvest" role="switch" checked>
+              <span class="track" aria-hidden="true"><span class="thumb"></span></span>
+            </label>
+            <button class="btn" type="button" id="p-reset">Rétablir l’observé</button>
+          </div>
+          <p class="count" id="proj-base"></p>
+        </div>
+
+        <div class="ledger" style="margin-top: 16px">
+          <div class="cell"><div class="cell-l">Revenus nets projetés</div><div class="cell-v" id="pj-total">—</div><div class="cell-n" id="pj-total-n">sur l’horizon retenu</div></div>
+          <div class="cell"><div class="cell-l">Revenu net mensuel moyen</div><div class="cell-v" id="pj-moyen">—</div><div class="cell-n" id="pj-moyen-n">contre <b id="pj-actuel">—</b> aujourd’hui</div></div>
+          <div class="cell"><div class="cell-l">Capital investi à terme</div><div class="cell-v" id="pj-capital">—</div><div class="cell-n" id="pj-capital-n">—</div></div>
+          <div class="cell"><div class="cell-l">Rendement net retenu</div><div class="cell-v" id="pj-net">—</div><div class="cell-n">après prélèvement de <b id="pj-impot">—</b></div></div>
+        </div>
+
+        <div class="cards" style="margin-top: 16px">
+          <div class="card">
+            <div class="card-h"><h3>Revenus nets cumulés</h3><span id="pj-sub">Mois après mois, à partir de la fin de l’export</span></div>
+            <div class="chart" id="c-projection" style="min-height: 240px"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Année par année</h3><span>Année civile, du mois qui suit l’export</span></div>
+            <div class="twrap" data-h="auto">
+              <table class="t" id="t-projection">
+                <thead><tr>
+                  <th>Année</th><th>Mois</th><th>Revenus nets</th><th>Cumul</th><th>Capital fin d’année</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px">
+          <div class="card-h"><h3>Ce que ce calcul suppose</h3><span>À lire avant de s’appuyer dessus</span></div>
+          <dl class="note"><dt>Le rendement se maintient</dt><dd>Le taux proposé par défaut est celui que votre portefeuille a réellement servi sur les douze derniers mois : revenus bruts rapportés au capital moyen investi sur la période. Rien ne garantit qu’il se maintienne.</dd></dl>
+          <dl class="note"><dt>Le capital reste placé</dt><dd>Les remboursements de capital sont supposés réinvestis au même rendement. Sans échéances dans l’export, la projection ne peut pas modéliser l’extinction progressive des projets.</dd></dl>
+          <dl class="note"><dt>Aucun défaut</dt><dd>Le calcul suppose que tous les projets paient. <b id="pj-risque">—</b></dd></dl>
+          <dl class="note"><dt>Fiscalité constante</dt><dd>Le prélèvement à la source est appliqué au taux moyen observé sur les douze derniers mois, supposé stable.</dd></dl>
+        </div>
+      </section>
+    </div>
+
+    <div id="p-ops" role="tabpanel" aria-labelledby="tab-ops" hidden>
+      <section class="sec">
+        <div class="sec-h"><h2>Toutes les opérations du wallet</h2><p>L’export complet, filtrable : pour retrouver un versement précis ou vérifier un chiffre.</p></div>
+        <div class="card">
+          <div class="tools">
+            <input id="q-ops" type="search" placeholder="Filtrer par projet, type, date…" aria-label="Filtrer les opérations">
+            <span class="count" id="n-ops"></span>
+          </div>
+          <div class="twrap">
+            <table class="t" id="t-ops">
+              <thead><tr>
+                <th data-k="date">Date</th><th data-k="type">Opération</th><th data-k="projet">Projet</th>
+                <th data-k="contrat">Contrat</th><th data-k="montant">Montant</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-h"><h3>Le wallet</h3><span>Trésorerie, hors investissements</span></div>
+          <div class="twrap" data-h="auto">
+            <table class="t">
+              <tbody>
+                <tr><td>Versements reçus (carte, virement)</td><td data-f="depots">—</td></tr>
+                <tr><td>Retraits vers le compte bancaire</td><td data-f="retraits">—</td></tr>
+                <tr><td>Primes, parrainage et solde boosté</td><td data-f="bonus">—</td></tr>
+                <tr><td>Solde disponible</td><td data-f="solde_wallet">—</td></tr>
+                <tr><td>Opérations validées dans l’export</td><td data-f="nb_transactions">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="p-methode" role="tabpanel" aria-labelledby="tab-methode" hidden>
+      <section class="sec">
+        <div class="sec-h"><h2>Comment chaque chiffre est calculé</h2><p>Tout vient de l’export des transactions du wallet. Les opérations refusées et annulées sont écartées.</p></div>
+        <div class="card">
+          <dl class="note"><dt>Capital placé</dt><dd>Somme des achats de bricks et des achats sur la marketplace.</dd></dl>
+          <dl class="note"><dt>Capital investi</dt><dd>Capital placé moins les remboursements de capital reçus : le montant réellement exposé aujourd’hui.</dd></dl>
+          <dl class="note"><dt>Revenus</dt><dd>Lignes « Revenus reversés » : loyers et intérêts, avant impôt. Les remboursements de capital n’y sont pas comptés.</dd></dl>
+          <dl class="note"><dt>Primes et bonus</dt><dd>Primes de parrainage, solde boosté et gestes commerciaux. Ils comptent dans les revenus encaissés et dans le total de la période, mais pas dans le rendement ni le TRI d’un projet : ils ne sont pas produits par le capital placé. Le prélèvement observé ne portant que sur les revenus des projets, ils sont affichés sans retenue.</dd></dl>
+          <dl class="note"><dt>Revenus nets</dt><dd>Revenus moins le prélèvement à la source. Le prélèvement n’étant pas rattaché à un projet dans l’export, il reste global.</dd></dl>
+          <dl class="note"><dt>Revenus par type de contrat</dt><dd>Chaque versement est rattaché au contrat du projet qui l’a produit. En vue nette, le prélèvement du mois est réparti entre les contrats au prorata des revenus de ce mois : le total affiché est exact, la répartition entre contrats est une approximation.</dd></dl>
+          <dl class="note"><dt>TRI</dt><dd>Taux de rendement interne annualisé (méthode XIRR) sur les flux réels aux dates réelles, avec le capital non remboursé valorisé à son montant nominal à la date de l’export. C’est une hypothèse : un projet en défaut paraîtra meilleur qu’il ne l’est jusqu’à ce que la perte se matérialise.</dd></dl>
+          <dl class="note"><dt>Rendement brut</dt><dd>Revenus perçus divisés par le capital placé, sans annualisation.</dd></dl>
+          <dl class="note"><dt>Projets comptés</dt><dd>Une prime de parrainage porte dans l’export le nom du projet souscrit par le filleul. Les projets qui n’apparaissent qu’à ce titre, sans aucun achat ni revenu de votre part, sont écartés du décompte et des tableaux.</dd></dl>
+          <dl class="note"><dt>Projet soldé</dt><dd>Capital remboursé au moins égal au capital placé, à 0,50 € près.</dd></dl>
+          <dl class="note"><dt>Versement en retard</dt><dd>Projet non soldé dont le prochain versement aurait dû arriver. Le délai attendu est l’écart médian entre ses versements passés, plus une tolérance d’un demi-cycle (au moins 15 jours). Un projet qui n’a versé qu’une fois est jugé sur un forfait de 120 jours ; un projet qui n’a jamais rien versé l’est passé 90 jours de détention.</dd></dl>
+          <dl class="note"><dt>Revenus non perçus</dt><dd>Estimation, et non un montant dû : nombre de versements manqués multiplié par la moyenne des trois derniers versements du projet. Non calculable pour un projet qui n’a jamais versé, ou qui n’a versé qu’une fois.</dd></dl>
+          <dl class="note"><dt>Confidentialité</dt><dd>Le fichier que vous déposez est lu par votre navigateur, sur votre appareil. Il n’est transmis à aucun serveur : le site qui héberge cette page ne reçoit que la demande de la page elle-même, jamais vos données. Celles-ci sont conservées dans le stockage local du navigateur et ne quittent pas cet appareil ; elles ne sont donc pas partagées entre vos appareils, et le bouton Réinitialiser les efface définitivement. Vider les données de navigation du site les supprime également ; il suffit alors de réimporter votre export.</dd></dl>
+          <dl class="note"><dt>Projection</dt><dd>Elle applique le rendement des douze derniers mois au capital investi, mois après mois, et prélève l’impôt au taux moyen observé. L’onglet Projection détaille les quatre hypothèses qu’elle suppose ; aucune ne vient de Bricks.</dd></dl>
+          <dl class="note"><dt>Ce que l’export ne contient pas</dt><dd>Taux affiché à la souscription, échéance prévue, durée du projet, valorisation de marché et statut communiqué par Bricks. Sans ces informations, impossible de comparer le réalisé au promis.</dd></dl>
+        </div>
+      </section>
+    </div>
+
+    <p class="foot" id="foot"></p>
+  </div>
+
+  <input type="file" id="file" accept=".xlsx,.xls,.csv,text/csv" hidden>
+</div>
+
+<script>
+/* Moteur de calcul du portefeuille Bricks.
+   Même code dans l'application et dans la génération des données initiales. */
+var BRICKS = (function () {
+  'use strict';
+
+  var ACHAT = ['achat de bricks', 'achat marketplace'];
+  var CAP = 'remboursement de capital';
+  var REV = 'revenus reverses';
+  var TAX = 'prelevement a la source';
+  var BONUS = ['solde booste', 'prime de parrainage en tant que parrain', 'prime de parrainage en tant que filleul', 'ajustement commercial'];
+  var DEPOT = ['credit par carte', 'credit par virement', 'depot'];
+  var RETRAIT = 'retrait';
+  var LBL = { obligation: 'Obligation', loan: 'Prêt', royalty: 'Royalty', '': 'Non défini' };
+
+  function norm(v) {
+    return String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function utc(y, m, d) { return new Date(Date.UTC(y, m, d)); }
+  function days(a, b) { return Math.round((b - a) / 86400000); }
+
+  function parseDate(v) {
+    if (v instanceof Date && !isNaN(v)) return utc(v.getFullYear(), v.getMonth(), v.getDate());
+    if (typeof v === 'number' && isFinite(v)) return new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000);
+    var s = String(v == null ? '' : v).trim();
+    var m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/);
+    if (m) return utc(+m[3], +m[2] - 1, +m[1]);
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return utc(+m[1], +m[2] - 1, +m[3]);
+    return null;
+  }
+  function parseNum(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    var s = String(v == null ? '' : v).replace(/[\s  €]/g, '');
+    if (s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(',', '.');
+    var n = parseFloat(s);
+    return isFinite(n) ? n : 0;
+  }
+  function r2(n) { return Math.round(n * 100) / 100; }
+  function mediane(a) {
+    if (!a.length) return null;
+    var s = a.slice().sort(function (x, y) { return x - y; }), m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+
+  /* ---- colonnes de l'export ---- */
+  function mapColumns(headers) {
+    var map = {};
+    headers.forEach(function (h) {
+      var n = norm(h);
+      if (n === 'date') map.date = h;
+      else if (n === 'type') map.type = h;
+      else if (n === 'statut') map.statut = h;
+      else if (n.indexOf('propriet') === 0 || n === 'projet' || n === 'bien') map.projet = h;
+      else if (n.indexOf('type de contrat') === 0 || n === 'contrat') map.contrat = h;
+      else if (n.indexOf('montant') === 0) map.montant = h;
+    });
+    return map;
+  }
+
+  function normalizeRows(raw) {
+    if (!raw || !raw.length) return { rows: [], erreur: 'Le fichier ne contient aucune ligne.' };
+    var map = mapColumns(Object.keys(raw[0]));
+    var manque = ['date', 'type', 'montant'].filter(function (k) { return !map[k]; });
+    if (manque.length) {
+      return { rows: [], erreur: 'Colonnes introuvables : ' + manque.join(', ') + '. Attendu un export de transactions Bricks avec les colonnes date, type, statut, propriété, type de contrat et montant.' };
+    }
+    var rows = [], ignorees = 0, inconnus = {}, i, n = 0;
+    for (i = 0; i < raw.length; i++) {
+      var r = raw[i];
+      var d = parseDate(r[map.date]);
+      var t = String(r[map.type] == null ? '' : r[map.type]).trim();
+      if (!d || !t) { ignorees++; continue; }
+      var st = map.statut ? norm(r[map.statut]) : 'validee';
+      if (st && st !== 'validee') continue;
+      var nt = norm(t);
+      var cat = ACHAT.indexOf(nt) > -1 ? 'achat' : nt === CAP ? 'capital' : nt === REV ? 'revenu'
+        : nt === TAX ? 'impot' : BONUS.indexOf(nt) > -1 ? 'bonus' : DEPOT.indexOf(nt) > -1 ? 'depot'
+        : nt === RETRAIT ? 'retrait' : null;
+      if (!cat) { inconnus[t] = (inconnus[t] || 0) + 1; continue; }
+      n++;
+      rows.push({
+        ref: 'T' + ('0000' + n).slice(-5),
+        d: d,
+        date: iso(d),
+        type: t,
+        cat: cat,
+        projet: map.projet ? String(r[map.projet] == null ? '' : r[map.projet]).trim() : '',
+        contrat: map.contrat ? norm(r[map.contrat]) : '',
+        montant: parseNum(r[map.montant])
+      });
+    }
+    rows.sort(function (a, b) { return a.d - b.d || a.ref.localeCompare(b.ref); });
+    rows.forEach(function (r, i) { r.ref = 'T' + ('0000' + (i + 1)).slice(-5); });
+    return { rows: rows, ignorees: ignorees, inconnus: inconnus };
+  }
+
+  /* ---- TRI (XIRR) par bissection ---- */
+  function xnpv(rate, flows) {
+    var t0 = flows[0][0], s = 0, i;
+    for (i = 0; i < flows.length; i++) s += flows[i][1] / Math.pow(1 + rate, days(t0, flows[i][0]) / 365);
+    return s;
+  }
+  function xirr(flows) {
+    if (!flows || flows.length < 2) return null;
+    flows = flows.slice().sort(function (a, b) { return a[0] - b[0]; });
+    var neg = false, pos = false, i;
+    for (i = 0; i < flows.length; i++) { if (flows[i][1] < 0) neg = true; if (flows[i][1] > 0) pos = true; }
+    if (!neg || !pos) return null;
+    var lo = -0.9999, hi = 10, flo, fhi, mid, fm;
+    try { flo = xnpv(lo, flows); fhi = xnpv(hi, flows); } catch (e) { return null; }
+    if (!isFinite(flo) || !isFinite(fhi) || flo * fhi > 0) return null;
+    for (i = 0; i < 200; i++) {
+      mid = (lo + hi) / 2;
+      fm = xnpv(mid, flows);
+      if (flo * fm <= 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; }
+    }
+    var r = (lo + hi) / 2;
+    return r > -0.95 && r < 10 ? r : null;
+  }
+
+  /* ---- analyse complète ---- */
+  function analyser(rows, meta) {
+    if (!rows.length) return null;
+    var asof = rows[rows.length - 1].d;
+    var debut = rows[0].d;
+    var i, r;
+
+    /* projets */
+    var P = {}, ordre = [];
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      if (!r.projet) continue;
+      if (!P[r.projet]) { P[r.projet] = { investi: 0, cap: 0, rev: 0, flows: [], first: null, last: null, contrat: '', nbAchats: 0, nbRev: 0, lastRev: null, revDates: [], revMontants: [] }; ordre.push(r.projet); }
+      var p = P[r.projet];
+      if (r.contrat) p.contrat = r.contrat;
+      if (!p.last || r.d > p.last) p.last = r.d;
+      if (r.cat === 'achat') {
+        p.investi += -r.montant; p.nbAchats++;
+        if (!p.first || r.d < p.first) p.first = r.d;
+        p.flows.push([r.d, r.montant]);
+      } else if (r.cat === 'capital') {
+        p.cap += r.montant; p.flows.push([r.d, r.montant]);
+      } else if (r.cat === 'revenu') {
+        p.rev += r.montant; p.nbRev++; p.flows.push([r.d, r.montant]);
+        p.revDates.push(r.d); p.revMontants.push(r.montant);
+        if (!p.lastRev || r.d > p.lastRev) p.lastRev = r.d;
+      }
+    }
+
+    var projets = ordre.map(function (nom) {
+      var p = P[nom];
+      var investi = r2(p.investi), cap = r2(p.cap), rev = r2(p.rev);
+      var encours = r2(Math.max(investi - cap, 0));
+      var cloture = investi > 0 && cap >= investi - 0.5;
+      var statut = cloture ? 'Remboursé' : (cap > 0.5 ? 'Partiel' : 'En cours');
+      var fl = p.flows.slice();
+      if (!cloture && encours > 0.5) fl.push([asof, encours]);
+      var tri = (rev <= 0.005 && cap <= 0.005) ? null : xirr(fl);
+      var duree = p.first ? days(p.first, asof) : 0;
+      var sans = p.lastRev ? days(p.lastRev, asof) : null;
+
+      /* Rythme propre au projet : écart médian entre ses versements passés.
+         Le prochain versement est attendu après un cycle, plus une tolérance d'un demi-cycle. */
+      var cadence = null, ecarts = [], j;
+      if (p.revDates.length >= 2) {
+        var dts = p.revDates.slice().sort(function (a, b) { return a - b; });
+        for (j = 1; j < dts.length; j++) { var e = days(dts[j - 1], dts[j]); if (e > 0) ecarts.push(e); }
+        cadence = ecarts.length ? Math.round(mediane(ecarts)) : null;
+      }
+      var base = null, retardJ = 0, manque = null, manquees = 0;
+      if (!cloture && encours > 0.5) {
+        if (cadence) {
+          base = 'rythme';
+          retardJ = sans - (cadence + Math.max(15, Math.round(cadence * 0.5)));
+          if (retardJ > 0) {
+            manquees = Math.max(1, Math.floor(sans / cadence) - 1);
+            var der = p.revMontants.slice(-3);
+            var moyen = der.reduce(function (a, b) { return a + b; }, 0) / der.length;
+            manque = r2(manquees * moyen);
+          }
+        } else if (p.lastRev) {
+          base = 'forfait';
+          retardJ = sans - 120;
+        } else if (duree > 90) {
+          base = 'jamais';
+          retardJ = duree - 90;
+        }
+      }
+      var enRetard = base !== null && retardJ > 0;
+      var vigilance = cloture ? 'Remboursé' : enRetard ? 'Retard' : (p.lastRev === null && duree <= 90) ? 'Trop récent' : 'Normal';
+      return {
+        projet: nom, contrat: p.contrat || '', investi: investi, capital_rembourse: cap, revenus: rev,
+        encours: encours, pct_rembourse: investi ? r2(100 * cap / investi) : 0, statut: statut,
+        rendement_brut: investi ? r2(100 * rev / investi) : 0,
+        tri: tri === null ? null : r2(100 * tri),
+        premier_achat: p.first ? iso(p.first) : '', dernier_flux: p.last ? iso(p.last) : '',
+        jours_detention: duree, nb_achats: p.nbAchats,
+        dernier_revenu: p.lastRev ? iso(p.lastRev) : '', jours_sans_revenu: sans,
+        nb_versements: p.nbRev, vigilance: vigilance,
+        cadence_jours: cadence, retard_base: enRetard ? base : '',
+        retard_jours: enRetard ? retardJ : null,
+        mois_retard: enRetard ? r2(retardJ / 30.44) : null,
+        versements_manques: enRetard ? manquees : null,
+        manque_a_gagner: enRetard ? manque : null
+      };
+    })
+      /* Une prime de parrainage porte le nom du projet souscrit par le filleul :
+         sans achat ni revenu, ce n'est pas un projet du portefeuille. */
+      .filter(function (p) {
+        return p.nb_achats > 0 || p.investi > 0.005 || p.revenus > 0.005 || p.capital_rembourse > 0.005;
+      })
+      .sort(function (a, b) { return b.investi - a.investi; });
+
+    /* mois */
+    var M = {}, mk;
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      mk = r.date.slice(0, 7);
+      if (!M[mk]) M[mk] = { achats: 0, remboursements: 0, revenus: 0, impots: 0, bonus: 0, depots: 0, retraits: 0,
+                            rev_obligation: 0, rev_loan: 0, rev_royalty: 0, rev_autre: 0 };
+      var m = M[mk];
+      if (r.cat === 'achat') m.achats += -r.montant;
+      else if (r.cat === 'capital') m.remboursements += r.montant;
+      else if (r.cat === 'revenu') {
+        m.revenus += r.montant;
+        m[r.contrat === 'obligation' ? 'rev_obligation' : r.contrat === 'loan' ? 'rev_loan'
+          : r.contrat === 'royalty' ? 'rev_royalty' : 'rev_autre'] += r.montant;
+      }
+      else if (r.cat === 'impot') m.impots += -r.montant;
+      else if (r.cat === 'bonus') m.bonus += r.montant;
+      else if (r.cat === 'depot') m.depots += r.montant;
+      else if (r.cat === 'retrait') m.retraits += -r.montant;
+    }
+    var mensuel = [], ci = 0, cr = 0, crev = 0, cimp = 0;
+    var cur = utc(debut.getUTCFullYear(), debut.getUTCMonth(), 1);
+    var fin = utc(asof.getUTCFullYear(), asof.getUTCMonth(), 1);
+    while (cur <= fin) {
+      mk = cur.getUTCFullYear() + '-' + pad(cur.getUTCMonth() + 1);
+      var mm = M[mk] || { achats: 0, remboursements: 0, revenus: 0, impots: 0, bonus: 0, depots: 0, retraits: 0,
+                          rev_obligation: 0, rev_loan: 0, rev_royalty: 0, rev_autre: 0 };
+      ci += mm.achats; cr += mm.remboursements; crev += mm.revenus; cimp += mm.impots;
+      mensuel.push({
+        mois: mk, achats: r2(mm.achats), remboursements: r2(mm.remboursements), revenus: r2(mm.revenus),
+        impots: r2(mm.impots), bonus: r2(mm.bonus), revenus_nets: r2(mm.revenus - mm.impots),
+        rev_obligation: r2(mm.rev_obligation), rev_loan: r2(mm.rev_loan),
+        rev_royalty: r2(mm.rev_royalty), rev_autre: r2(mm.rev_autre),
+        cumul_investi: r2(ci), cumul_rembourse: r2(cr), cumul_revenus: r2(crev), cumul_impots: r2(cimp),
+        encours: r2(ci - cr)
+      });
+      cur = utc(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 1);
+    }
+
+    /* contrats */
+    var Cg = {}, cordre = [];
+    projets.forEach(function (p) {
+      var k = p.contrat || '';
+      if (!Cg[k]) { Cg[k] = { n: 0, investi: 0, cap: 0, rev: 0 }; cordre.push(k); }
+      Cg[k].n++; Cg[k].investi += p.investi; Cg[k].cap += p.capital_rembourse; Cg[k].rev += p.revenus;
+    });
+    var contrats = cordre.map(function (k) {
+      var c = Cg[k];
+      return {
+        contrat: LBL[k] || (k.charAt(0).toUpperCase() + k.slice(1)), nb_projets: c.n,
+        investi: r2(c.investi), capital_rembourse: r2(c.cap), revenus: r2(c.rev),
+        encours: r2(c.investi - c.cap), rendement_brut: c.investi ? r2(100 * c.rev / c.investi) : 0
+      };
+    }).sort(function (a, b) { return b.investi - a.investi; });
+
+    /* totaux */
+    var sum = function (cat, sign) {
+      var s = 0;
+      for (var j = 0; j < rows.length; j++) if (rows[j].cat === cat) s += rows[j].montant;
+      return r2((sign || 1) * s);
+    };
+    var investi = r2(projets.reduce(function (a, p) { return a + p.investi; }, 0));
+    var cap = r2(projets.reduce(function (a, p) { return a + p.capital_rembourse; }, 0));
+    var rev = r2(projets.reduce(function (a, p) { return a + p.revenus; }, 0));
+    var impots = sum('impot', -1);
+    var encours = r2(investi - cap);
+    var solde = r2(rows.reduce(function (a, r) { return a + r.montant; }, 0));
+
+    var flNet = [], flBrut = [];
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      if (r.cat === 'achat' || r.cat === 'capital' || r.cat === 'revenu') { flNet.push([r.d, r.montant]); flBrut.push([r.d, r.montant]); }
+      else if (r.cat === 'impot') flNet.push([r.d, r.montant]);
+    }
+    flNet.push([asof, encours]); flBrut.push([asof, encours]);
+    var triNet = xirr(flNet), triBrut = xirr(flBrut);
+
+    /* capital moyen pondéré par le temps */
+    var enc = 0, prev = null, wsum = 0;
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      if (r.cat !== 'achat' && r.cat !== 'capital') continue;
+      if (prev !== null) wsum += enc * days(prev, r.d);
+      prev = r.d;
+      if (r.cat === 'achat') enc += -r.montant; else enc -= r.montant;
+    }
+    if (prev !== null) wsum += enc * days(prev, asof);
+
+    var vig = projets.filter(function (p) { return p.vigilance === 'Retard'; })
+      .sort(function (a, b) { return b.mois_retard - a.mois_retard; });
+    var top10 = projets.slice(0, 10).reduce(function (a, p) { return a + p.investi; }, 0);
+    var nbRemb = projets.filter(function (p) { return p.statut === 'Remboursé'; }).length;
+
+    var synthese = {
+      capital_investi: investi, capital_rembourse: cap, encours: encours,
+      revenus_bruts: rev, prelevement_source: impots, revenus_nets: r2(rev - impots),
+      bonus: sum('bonus'), depots: sum('depot'), retraits: sum('retrait', -1), solde_wallet: solde,
+      /* Encaissements : revenus des projets + primes de parrainage, solde boosté et gestes commerciaux */
+      encaisse_brut: r2(rev + sum('bonus')), encaisse_net: r2(rev - impots + sum('bonus')),
+      nb_projets: projets.length, nb_actifs: projets.length - nbRemb, nb_rembourses: nbRemb,
+      ticket_moyen: projets.length ? r2(investi / projets.length) : 0,
+      tri_net: triNet === null ? null : r2(100 * triNet),
+      tri_brut: triBrut === null ? null : r2(100 * triBrut),
+      rendement_brut_cumule: investi ? r2(100 * rev / investi) : 0,
+      capital_moyen_investi: r2(wsum / Math.max(days(debut, asof), 1)),
+      taux_prelevement: rev ? r2(100 * impots / rev) : 0,
+      gain_net_total: r2(rev - impots + sum('bonus')),
+      anciennete_mois: r2(days(debut, asof) / 30.44),
+      date_export: iso(asof), premier_investissement: iso(debut),
+      nb_transactions: rows.length,
+      concentration_top10: investi ? r2(100 * top10 / investi) : 0,
+      plus_gros_ticket: projets.length ? projets[0].investi : 0,
+      nb_retard: vig.length,
+      encours_retard: r2(vig.reduce(function (a, p) { return a + p.encours; }, 0)),
+      manque_total: r2(vig.reduce(function (a, p) { return a + (p.manque_a_gagner || 0); }, 0)),
+      retard_max_mois: vig.length ? vig[0].mois_retard : null,
+      retard_max_projet: vig.length ? vig[0].projet : ''
+    };
+
+    return {
+      synthese: synthese, projets: projets, mensuel: mensuel, contrats: contrats,
+      meta: {
+        fichier: (meta && meta.fichier) || '', importeLe: (meta && meta.importeLe) || new Date().toISOString(),
+        asof: iso(asof), debut: iso(debut), nb: rows.length,
+        ignorees: (meta && meta.ignorees) || 0, inconnus: (meta && meta.inconnus) || {}
+      },
+      transactions: rows.map(function (r) {
+        return { ref: r.ref, date: r.date, type: r.type, projet: r.projet, contrat: r.contrat, montant: r2(r.montant) };
+      })
+    };
+  }
+
+  return { norm: norm, iso: iso, parseDate: parseDate, parseNum: parseNum, normalizeRows: normalizeRows, analyser: analyser, xirr: xirr, LBL: LBL };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
+
+</script>
+
+<script>
+(() => {
+  'use strict';
+  const B = window.BRICKS, d3 = window.d3;
+  const $ = (id) => document.getElementById(id);
+  const CHUNK = 450;
+
+  const nf = (a, b) => new Intl.NumberFormat('fr-FR', { minimumFractionDigits: a, maximumFractionDigits: b });
+  const n0 = nf(0, 0), n1 = nf(1, 1), n2 = nf(2, 2);
+  const eur = (v) => n0.format(Math.round(+v)) + ' €';
+  const eur2 = (v) => n2.format(+v) + ' €';
+  const pct = (v) => (v === null || v === undefined || v === '' ? '—' : n2.format(+v) + ' %');
+  const pct1 = (v) => (v === null || v === undefined || v === '' ? '—' : n1.format(+v) + ' %');
+  const num = (v) => (v === null || v === undefined || v === '' ? '—' : n0.format(+v));
+  const dmy = (iso) => { const p = String(iso || '').slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '—'; };
+  const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  const mLab = (d) => MOIS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
+  const mFull = (s) => { const d = new Date(s + '-01T00:00:00Z'); return MOIS[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+
+  const FMT = {
+    encours: eur, capital_investi: eur, capital_rembourse: eur, revenus_bruts: eur2, revenus_nets: eur2,
+    prelevement_source: eur2, bonus: eur2, depots: eur, retraits: eur2, solde_wallet: eur2, ticket_moyen: eur,
+    tri_net: pct, tri_brut: pct, rendement_brut_cumule: pct, taux_prelevement: pct1, gain_net_total: eur2,
+    capital_moyen_investi: eur, plus_gros_ticket: eur, encours_retard: eur, concentration_top10: pct1,
+    encaisse_net: eur2, encaisse_brut: eur2,
+    manque_total: eur2, retard_max_mois: (v) => n1.format(v) + ' mois',
+    nb_projets: num, nb_actifs: num, nb_rembourses: num, nb_transactions: num, nb_retard: num, anciennete_mois: n0.format.bind(n0)
+  };
+  const MESURE = { rythme: 'Rythme du projet', forfait: 'Au-delà de 120 j', jamais: 'Jamais versé' };
+
+  /* ---------- état ---------- */
+  let data = null;         // { synthese, projets, mensuel, contrats, meta }
+  let txRows = [];         // opérations
+  let peutEcrire = true, dbPret = false, stockageOk = true;
+  let resetArme = false;
+
+  /* Tout reste dans ce navigateur : rien n'est envoyé nulle part. */
+  const CLE = 'bricks.portefeuille.v1';
+  const CLE_TX = 'bricks.transactions.v1';
+
+  /* ---------- notifications ---------- */
+  function flash(kind, html, actions) {
+    const box = $('flash'), t = $('flash-t');
+    t.replaceChildren();
+    const p = document.createElement('div');
+    (Array.isArray(html) ? html : [html]).forEach((part) => {
+      if (typeof part === 'string') { const s = document.createElement('span'); s.textContent = part; p.append(s); }
+      else p.append(part);
+    });
+    t.append(p);
+    if (actions && actions.length) {
+      const row = document.createElement('div');
+      row.className = 'flash-row';
+      actions.forEach((a) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn';
+        if (a.variant) b.setAttribute('data-v', a.variant);
+        b.textContent = a.label;
+        b.addEventListener('click', a.onClick);
+        row.append(b);
+      });
+      t.append(row);
+    }
+    box.setAttribute('data-k', kind);
+    box.hidden = false;
+  }
+  const flashOff = () => { $('flash').hidden = true; resetArme = false; };
+  const strong = (s) => { const b = document.createElement('b'); b.textContent = s; return b; };
+
+  /* ---------- rendu ---------- */
+  function renderMeta() {
+    const el = $('meta');
+    el.replaceChildren();
+    if (!data) {
+      const s = document.createElement('span');
+      if (dbPret) s.textContent = 'En attente d’un premier import';
+      else { s.className = 'skel'; s.textContent = ' '; }
+      el.append(s);
+      return;
+    }
+    const m = data.meta, s = data.synthese;
+    const bits = [];
+    bits.push(['Export du ', s.date_export]);
+    bits.push(['', num(s.nb_transactions) + ' opérations']);
+    bits.push(['', num(s.nb_projets) + ' projets']);
+    bits.push(['Importé le ', (m.importeLe || '').slice(0, 10)]);
+    const jours = Math.round((Date.now() - new Date(s.date_export + 'T00:00:00Z')) / 86400000);
+    bits.forEach((b, i) => {
+      if (i) { const d = document.createElement('i'); d.className = 'dot'; el.append(d); }
+      const sp = document.createElement('span');
+      if (b[0] === 'Export du ') { sp.append(document.createTextNode('Export du '), strong(dmy(b[1]))); }
+      else if (b[0] === 'Importé le ') { sp.append(document.createTextNode('importé le '), strong(dmy(b[1]))); }
+      else sp.textContent = b[1];
+      el.append(sp);
+    });
+    if (jours > 40) {
+      const d = document.createElement('i'); d.className = 'dot'; el.append(d);
+      const w = document.createElement('span');
+      w.className = 'stale';
+      w.textContent = 'données vieilles de ' + num(jours) + ' jours';
+      el.append(w);
+    }
+  }
+
+  function renderValues() {
+    document.querySelectorAll('[data-f]').forEach((el) => {
+      const f = el.getAttribute('data-f');
+      const v = data ? data.synthese[f] : null;
+      el.textContent = (v === null || v === undefined) ? '—' : (FMT[f] ? FMT[f](v) : String(v));
+    });
+    if (data) {
+      const nr = +data.synthese.nb_retard || 0;
+      $('sub-vigilance').textContent = nr
+        ? num(nr) + (nr > 1 ? ' projets concernés, ' : ' projet concerné, ') + eur(data.synthese.encours_retard) + ' de capital'
+        : 'Aucun projet en retard de versement';
+      $('note-vigilance').textContent = nr > 5 ? 'Les ' + num(nr) + ' projets sont détaillés dans l’onglet Projets.' : '';
+      $('note-retard').textContent = nr
+        ? 'Les revenus non perçus sont une estimation au rythme habituel de chaque projet, pas un montant dû par Bricks.'
+        : 'Aucun projet en retard : chaque projet non soldé a versé dans le délai attendu.';
+      $('sub-capital').textContent = 'Cumuls depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7));
+      $('seg-ytd').textContent = (data.synthese.date_export || '').slice(0, 4) || 'Année';
+      /* un champ number n'accepte que le point décimal */
+      if (!$('p-taux').value) $('p-taux').value = String(Math.round((tauxSaisi === null ? reference().taux : tauxSaisi) * 100) / 100);
+      $('foot').textContent = 'Calculé à partir de ' + num(data.synthese.nb_transactions)
+        + ' opérations validées de l’export Bricks' + (data.meta.fichier ? ' (' + data.meta.fichier + ')' : '')
+        + '. Ancienneté du portefeuille : ' + num(data.synthese.anciennete_mois) + ' mois.'
+        + ' Données conservées dans ce navigateur uniquement.';
+    }
+  }
+
+  /* ---------- tableaux ---------- */
+  const TS = {};
+  function table(id, cols, get, opts) {
+    const o = opts || {};
+    const tbl = $(id), tbody = tbl.querySelector('tbody');
+    const st = TS[id] || (TS[id] = { key: o.sort, dir: o.dir || 'desc', q: '', filter: '' });
+    tbl.querySelectorAll('thead th').forEach((th, i) => {
+      if (th.dataset.wired) return;
+      th.dataset.wired = '1';
+      const label = th.textContent;
+      th.replaceChildren();
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.addEventListener('click', () => {
+        const k = cols[i].k;
+        if (st.key === k) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.key = k; st.dir = cols[i].num ? 'desc' : 'asc'; }
+        draw();
+      });
+      th.append(b);
+    });
+    function draw() {
+      let rows = get() || [];
+      if (st.q) {
+        const q = B.norm(st.q);
+        rows = rows.filter((r) => cols.some((c) => B.norm(r[c.k]).includes(q)));
+      }
+      if (st.filter && o.filterKey) rows = rows.filter((r) => String(r[o.filterKey]) === st.filter);
+      const col = cols.find((c) => c.k === st.key);
+      if (col) {
+        const s = st.dir === 'asc' ? 1 : -1;
+        rows = rows.slice().sort((a, b2) => {
+          let x = a[col.k], y = b2[col.k];
+          if (col.num) {
+            x = (x === '' || x === null || x === undefined) ? -Infinity : +x;
+            y = (y === '' || y === null || y === undefined) ? -Infinity : +y;
+            return (x - y) * s;
+          }
+          return String(x == null ? '' : x).localeCompare(String(y == null ? '' : y), 'fr') * s;
+        });
+      }
+      const total = rows.length;
+      if (o.limit) rows = rows.slice(0, o.limit);
+      tbl.querySelectorAll('thead th').forEach((th, i) => {
+        if (cols[i].k === st.key) th.setAttribute('aria-sort', st.dir === 'asc' ? 'ascending' : 'descending');
+        else th.removeAttribute('aria-sort');
+      });
+      const frag = document.createDocumentFragment();
+      rows.forEach((r) => {
+        const tr = document.createElement('tr');
+        cols.forEach((c) => {
+          const td = document.createElement('td');
+          if (c.num) td.className = 'cnum';
+          if (c.bar) {
+            const v = Math.max(0, Math.min(100, +r[c.k] || 0));
+            const bar = document.createElement('span');
+            bar.className = 'bar';
+            const fill = document.createElement('i');
+            fill.style.width = v + '%';
+            if (v >= 99.5) fill.setAttribute('data-full', '1');
+            bar.append(fill);
+            const lab = document.createElement('span');
+            lab.className = 'cnum';
+            lab.style.marginLeft = '8px';
+            lab.textContent = pct1(r[c.k]);
+            td.append(bar, lab);
+          } else if (c.pill) {
+            const p = document.createElement('span');
+            p.className = 'pill';
+            const v = String(r[c.k] || '');
+            if (v === 'Remboursé') p.setAttribute('data-k', 'ok');
+            else if (v === 'Partiel') p.setAttribute('data-k', 'warn');
+            p.textContent = v;
+            td.append(p);
+          } else {
+            const raw = r[c.k];
+            td.textContent = (raw === '' || raw === null || raw === undefined) ? '—' : (c.f ? c.f(raw) : String(raw));
+            if (c.neg && +raw < 0) td.classList.add('neg');
+          }
+          tr.append(td);
+        });
+        frag.append(tr);
+      });
+      tbody.replaceChildren(frag);
+      if (o.countEl) {
+        $(o.countEl).textContent = num(total) + (total === 1 ? ' ligne' : ' lignes')
+          + (o.limit && total > o.limit ? ' · ' + num(o.limit) + ' affichées' : '');
+      }
+    }
+    st.draw = draw;
+    draw();
+    return st;
+  }
+
+  /* ---------- outils graphiques ---------- */
+  function mkSvg(el, w, h) {
+    el.replaceChildren();
+    return d3.select(el).append('svg').attr('viewBox', `0 0 ${w} ${h}`).attr('width', '100%').attr('role', 'img');
+  }
+  function tw(svg, arr, size) {
+    const g = svg.append('g').attr('visibility', 'hidden');
+    let m = 0;
+    arr.forEach((s) => { m = Math.max(m, g.append('text').attr('font-size', size).text(s).node().getComputedTextLength()); });
+    g.remove();
+    return m;
+  }
+  function axis(sel) {
+    sel.attr('font-size', null).attr('font-family', null);
+    sel.select('.domain').style('stroke', 'var(--line)');
+    sel.selectAll('.tick line').style('stroke', 'var(--line)');
+    sel.selectAll('text').style('fill', 'var(--muted)').attr('font-size', 10.5);
+  }
+  function grid(svg, y, x0, x1) {
+    svg.append('g').selectAll('line').data(y.ticks(5)).join('line')
+      .attr('x1', x0).attr('x2', x1).attr('y1', y).attr('y2', y).style('stroke', 'var(--grid)');
+  }
+  function tipOf(card) {
+    let t = card.querySelector('.tip');
+    if (!t) { t = document.createElement('div'); t.className = 'tip'; card.append(t); }
+    return t;
+  }
+  function tipShow(tip, card, ev, title, lines) {
+    tip.replaceChildren();
+    const h = document.createElement('div');
+    h.className = 'tip-d';
+    h.textContent = title;
+    tip.append(h);
+    lines.forEach((l) => {
+      const r = document.createElement('div');
+      r.className = 'tip-r';
+      if (l.c) { const s = document.createElement('span'); s.className = 'sw'; s.style.background = l.c; r.append(s); }
+      const n = document.createElement('span');
+      n.textContent = l.t;
+      r.append(n);
+      tip.append(r);
+    });
+    tip.style.opacity = '1';
+    const b = card.getBoundingClientRect();
+    const x = ev.clientX - b.left, y = ev.clientY - b.top;
+    tip.style.left = Math.max(4, Math.min(b.width - tip.offsetWidth - 4, x + 14)) + 'px';
+    tip.style.top = Math.max(4, Math.min(b.height - tip.offsetHeight - 4, y - tip.offsetHeight - 10)) + 'px';
+  }
+  function legend(id, items) {
+    const el = $(id);
+    if (!el) return;
+    el.replaceChildren();
+    items.forEach((it) => {
+      const s = document.createElement('span');
+      const sw = document.createElement('span');
+      sw.className = 'sw';
+      sw.style.background = it.c;
+      const t = document.createElement('span');
+      t.textContent = it.t;
+      s.append(sw, t);
+      el.append(s);
+    });
+  }
+
+  /* ---------- graphiques ---------- */
+  function drawCapital() {
+    const el = $('c-capital');
+    if (!el || !data) return;
+    const card = el.closest('.card');
+    const rows = data.mensuel.map((r) => ({ d: new Date(r.mois + '-01T00:00:00Z'), a: +r.cumul_investi, b: +r.encours, c: +r.cumul_rembourse }));
+    const W = Math.max(300, el.clientWidth || 600), H = Math.max(230, Math.min(330, W * 0.5));
+    const svg = mkSvg(el, W, H);
+    if (rows.length < 2) return;
+    const S = [{ k: 'a', t: 'Total placé', c: 'var(--s1)' }, { k: 'b', t: 'Investi', c: 'var(--s3)' }, { k: 'c', t: 'Remboursé', c: 'var(--s2)' }];
+    const maxY = d3.max(rows, (r) => r.a) || 1;
+    const m = { t: 10, r: Math.min(tw(svg, S.map((s) => s.t), 10.5) + 16, W * 0.3), b: 24, l: tw(svg, d3.ticks(0, maxY, 5).map(eur), 10.5) + 10 };
+    const x = d3.scaleUtc(d3.extent(rows, (r) => r.d), [m.l, W - m.r]);
+    const y = d3.scaleLinear([0, maxY], [H - m.b, m.t]).nice();
+    grid(svg, y, m.l, W - m.r);
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 72))).tickFormat(mLab).tickSizeOuter(0)).call(axis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(eur).tickSizeOuter(0)).call(axis);
+    const g = svg.append('defs').append('linearGradient').attr('id', 'gcap').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 1);
+    [[0, .26], [.25, .16], [.5, .08], [.75, .03], [1, 0]].forEach(([o, op]) =>
+      g.append('stop').attr('offset', o).attr('stop-opacity', op).attr('style', 'stop-color: var(--s3)'));
+    svg.append('path').datum(rows).attr('fill', 'url(#gcap)')
+      .attr('d', d3.area().x((r) => x(r.d)).y0(y(0)).y1((r) => y(r.b)));
+    S.forEach((s) => svg.append('path').datum(rows).attr('fill', 'none').style('stroke', s.c)
+      .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+      .attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r[s.k]))));
+    const last = rows[rows.length - 1];
+    const pos = S.map((s) => ({ s, yy: y(last[s.k]) })).sort((a, b) => a.yy - b.yy);
+    for (let i = 1; i < pos.length; i++) if (pos[i].yy - pos[i - 1].yy < 12) pos[i].yy = pos[i - 1].yy + 12;
+    pos.forEach((p) => {
+      svg.append('circle').attr('cx', x(last.d)).attr('cy', y(last[p.s.k])).attr('r', 3).style('fill', p.s.c);
+      svg.append('text').attr('x', x(last.d) + 7).attr('y', Math.min(H - m.b, Math.max(10, p.yy)) + 3.5)
+        .attr('font-size', 10.5).style('fill', p.s.c).text(p.s.t);
+    });
+    const tip = tipOf(card);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', Math.max(1, W - m.l - m.r)).attr('height', Math.max(1, H - m.t - m.b))
+      .attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const px = d3.pointer(ev, svg.node())[0];
+        const r = rows[d3.leastIndex(rows, (q) => Math.abs(x(q.d) - px))];
+        tipShow(tip, card, ev, mLab(r.d), S.map((s) => ({ c: s.c, t: s.t + ' · ' + eur(r[s.k]) })));
+      })
+      .on('mouseleave', () => { tip.style.opacity = '0'; });
+    legend('l-capital', S.map((s) => ({ c: s.c, t: s.t })));
+  }
+
+  /* Provenance des revenus : une couleur par type de contrat */
+  const SOURCES = [
+    { k: 'rev_obligation', t: 'Obligation', c: 'var(--s1)' },
+    { k: 'rev_loan', t: 'Prêt', c: 'var(--s3)' },
+    { k: 'rev_royalty', t: 'Royalty', c: 'var(--s2)' },
+    { k: 'rev_autre', t: 'Autre', c: 'var(--s4)' },
+    /* Primes de parrainage, solde boosté et gestes commerciaux : encaissés tels quels,
+       le prélèvement observé ne porte que sur les revenus des projets. */
+    { k: 'bonus', t: 'Primes et bonus', c: 'var(--s5)', horsImpot: true }
+  ];
+  const PERIODES = {
+    '3': '3 derniers mois', '6': '6 derniers mois', 'ytd': 'année en cours',
+    '12': '12 derniers mois', 'all': 'tout l’historique'
+  };
+  let periode = '12', mode = 'net';
+  try {
+    const p = localStorage.getItem('bk-periode'), n = localStorage.getItem('bk-mode');
+    if (p && PERIODES[p]) periode = p;
+    if (n === 'brut' || n === 'net') mode = n;
+  } catch (e) { /* stockage indisponible : on garde les valeurs par défaut */ }
+
+  function moisRetenus() {
+    const tous = data.mensuel;
+    if (!tous.length) return [];
+    if (periode === 'all') return tous;
+    if (periode === 'ytd') {
+      const an = (data.synthese.date_export || tous[tous.length - 1].mois).slice(0, 4);
+      return tous.filter((r) => r.mois.slice(0, 4) === an);
+    }
+    return tous.slice(-Number(periode));
+  }
+
+  function drawRevenus() {
+    const el = $('c-revenus');
+    if (!el || !data) return;
+    const card = el.closest('.card');
+    const net = mode === 'net';
+
+    /* Le prélèvement n'est pas rattaché à un projet dans l'export : pour le net
+       par type de contrat, l'impôt du mois est réparti au prorata des revenus du mois. */
+    const rows = moisRetenus().map((r) => {
+      const brut = +r.revenus || 0;
+      const part = net && brut > 0 ? Math.max(0, 1 - (+r.impots || 0) / brut) : 1;
+      const o = { mois: r.mois, d: new Date(r.mois + '-01T00:00:00Z'),
+        brut: brut + (+r.bonus || 0), net: (+r.revenus_nets || 0) + (+r.bonus || 0), tot: 0 };
+      SOURCES.forEach((s) => { o[s.k] = (+r[s.k] || 0) * (s.horsImpot ? 1 : part); o.tot += o[s.k]; });
+      return o;
+    });
+    const visibles = SOURCES.filter((s) => rows.some((r) => r[s.k] > 0.005));
+    const total = moisRetenus().reduce((a, r) =>
+      a + (net ? (+r.revenus_nets || 0) : (+r.revenus || 0)) + (+r.bonus || 0), 0);
+
+    const bornes = rows.length ? mLab(rows[0].d) + ' → ' + mLab(rows[rows.length - 1].d) : '';
+    $('rev-total').textContent = eur2(total);
+    $('rev-label').textContent = (net ? 'nets' : 'bruts') + ', ' + PERIODES[periode]
+      + (bornes ? ' (' + bornes + ')' : '');
+
+    const W = Math.max(300, el.clientWidth || 600), H = Math.max(230, Math.min(330, W * 0.5));
+    const svg = mkSvg(el, W, H);
+    legend('l-revenus', visibles.map((s) => ({ c: s.c, t: s.t })));
+    const avecRevenus = rows.filter((r) => r.tot > 0.005);
+    if (!avecRevenus.length) {
+      svg.append('text').attr('x', W / 2).attr('y', H / 2).attr('text-anchor', 'middle')
+        .attr('font-size', 12).style('fill', 'var(--muted)').text('Aucun revenu sur cette période');
+      return;
+    }
+    const maxY = d3.max(rows, (r) => r.tot) || 1;
+    const m = { t: 10, r: 8, b: 24, l: tw(svg, d3.ticks(0, maxY, 5).map(eur), 10.5) + 10 };
+    const x = d3.scaleBand(rows.map((r) => r.mois), [m.l, W - m.r]).padding(0.26);
+    const y = d3.scaleLinear([0, maxY], [H - m.b, m.t]).nice();
+    grid(svg, y, m.l, W - m.r);
+    const step = Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor((W - m.l - m.r) / 62))));
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).tickValues(rows.filter((_, i) => i % step === 0).map((r) => r.mois))
+        .tickFormat((s) => mLab(new Date(s + '-01T00:00:00Z'))).tickSizeOuter(0)).call(axis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(eur).tickSizeOuter(0)).call(axis);
+    const bw = Math.min(30, x.bandwidth()), off = (x.bandwidth() - bw) / 2, tip = tipOf(card);
+    const g = svg.append('g');
+    rows.forEach((r) => {
+      const xx = x(r.mois) + off;
+      let acc = 0;
+      visibles.forEach((s) => {
+        if (r[s.k] <= 0.005) return;
+        g.append('rect').attr('x', xx).attr('y', y(acc + r[s.k])).attr('width', bw)
+          .attr('height', Math.max(0, y(acc) - y(acc + r[s.k]))).attr('rx', 3).style('fill', s.c);
+        acc += r[s.k];
+      });
+      g.append('rect').attr('x', xx).attr('y', m.t).attr('width', bw).attr('height', Math.max(1, H - m.b - m.t))
+        .attr('fill', 'transparent')
+        .on('mousemove', (ev) => tipShow(tip, card, ev, mLab(r.d),
+          visibles.filter((s) => r[s.k] > 0.005).map((s) => ({ c: s.c, t: s.t + ' · ' + eur2(r[s.k]) }))
+            .concat([{ t: 'Total ' + (net ? 'net' : 'brut') + ' · ' + eur2(net ? r.net : r.brut) }])))
+        .on('mouseleave', () => { tip.style.opacity = '0'; });
+    });
+  }
+
+  function hbars(elId, rows, opts) {
+    const el = $(elId);
+    if (!el || !data) return;
+    const card = el.closest('.card');
+    const W = Math.max(300, el.clientWidth || 480);
+    const H = Math.max(opts.minH || 140, rows.length * opts.rowH + 30);
+    const svg = mkSvg(el, W, H);
+    if (!rows.length) return;
+    const short = (s) => (s.length > opts.cut ? s.slice(0, opts.cut - 1) + '…' : s);
+    const m = {
+      t: 4, b: 22,
+      l: Math.min(W * 0.46, tw(svg, rows.map((r) => short(r.nom)), 10.5) + 10),
+      r: Math.min(W * 0.26, tw(svg, rows.map((r) => opts.fmt(r.v)), 10.5) + 12)
+    };
+    const x = d3.scaleLinear([0, d3.max(rows, (r) => r.v) || 1], [m.l, W - m.r]);
+    const y = d3.scaleBand(rows.map((r) => r.nom), [m.t, H - m.b]).padding(0.28);
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 76))).tickFormat(eur).tickSizeOuter(0)).call(axis);
+    const tip = tipOf(card), bh = Math.min(opts.barH, y.bandwidth());
+    rows.forEach((r, i) => {
+      svg.append('rect').attr('x', m.l).attr('y', y(r.nom) + (y.bandwidth() - bh) / 2)
+        .attr('width', Math.max(1, x(r.v) - m.l)).attr('height', bh).attr('rx', 3)
+        .style('fill', opts.color ? opts.color(i) : 'var(--s1)')
+        .on('mousemove', (ev) => tipShow(tip, card, ev, r.nom, r.lines))
+        .on('mouseleave', () => { tip.style.opacity = '0'; });
+      svg.append('text').attr('x', m.l - 6).attr('y', y(r.nom) + y.bandwidth() / 2 + 3.5).attr('text-anchor', 'end')
+        .attr('font-size', 10.5).style('fill', 'var(--ink)').text(short(r.nom));
+      svg.append('text').attr('x', x(r.v) + 6).attr('y', y(r.nom) + y.bandwidth() / 2 + 3.5)
+        .attr('font-size', 10.5).style('fill', 'var(--muted)').text(opts.fmt(r.v));
+    });
+  }
+
+  function drawContrats() {
+    if (!data) return;
+    const SC = ['var(--s1)', 'var(--s3)', 'var(--s2)', 'var(--s4)'];
+    hbars('c-contrats', data.contrats.slice().sort((a, b) => b.encours - a.encours).map((r) => ({
+      nom: r.contrat, v: r.encours,
+      lines: [{ t: 'Investi · ' + eur(r.encours) }, { t: 'Placé · ' + eur(r.investi) },
+      { t: 'Projets · ' + num(r.nb_projets) }, { t: 'Rendement brut · ' + pct(r.rendement_brut) }]
+    })), { rowH: 30, barH: 26, cut: 18, fmt: eur, minH: 140, color: (i) => SC[i % SC.length] });
+  }
+
+  function drawTop() {
+    if (!data) return;
+    hbars('c-top', data.projets.slice().sort((a, b) => b.revenus - a.revenus).slice(0, 12).map((r) => ({
+      nom: r.projet, v: r.revenus,
+      lines: [{ c: 'var(--s1)', t: 'Revenus perçus · ' + eur2(r.revenus) }, { t: 'Placé · ' + eur(r.investi) },
+      { t: 'TRI · ' + pct(r.tri) }, { t: 'Versements · ' + num(r.nb_versements) }]
+    })), { rowH: 25, barH: 16, cut: 26, fmt: eur2, minH: 300 });
+  }
+
+  function drawTri() {
+    const el = $('c-tri');
+    if (!el || !data) return;
+    const card = el.closest('.card');
+    const rows = data.projets.filter((p) => p.tri !== null && p.tri !== '' && p.tri !== undefined);
+    const W = Math.max(300, el.clientWidth || 520), H = Math.max(300, Math.min(380, W * 0.62));
+    const svg = mkSvg(el, W, H);
+    const nb = data.projets.length - rows.length;
+    legend('l-tri', [{ c: 'var(--s1)', t: 'En cours' }, { c: 'var(--s2)', t: 'Remboursé' }]
+      .concat(nb ? [{ c: 'var(--grid)', t: num(nb) + ' projets trop récents, sans TRI calculable' }] : []));
+    if (!rows.length) return;
+    const ext = d3.extent(rows, (r) => r.tri);
+    const m = { t: 10, r: 12, b: 36, l: tw(svg, d3.ticks(Math.min(0, ext[0]), ext[1], 5).map(pct1), 10.5) + 10 };
+    const x = d3.scaleLinear([0, (d3.max(rows, (r) => r.jours_detention) || 1) * 1.02], [m.l, W - m.r]);
+    const y = d3.scaleLinear([Math.min(0, ext[0]), ext[1]], [H - m.b, m.t]).nice();
+    const rr = d3.scaleSqrt([0, d3.max(rows, (r) => r.investi) || 1], [3, 14]);
+    grid(svg, y, m.l, W - m.r);
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 70))).tickFormat(num).tickSizeOuter(0)).call(axis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(pct1).tickSizeOuter(0)).call(axis);
+    svg.append('text').attr('x', (m.l + W - m.r) / 2).attr('y', H - 4).attr('text-anchor', 'middle')
+      .attr('font-size', 10.5).style('fill', 'var(--muted)').text('Jours depuis le premier achat');
+    const tip = tipOf(card);
+    svg.append('g').selectAll('circle').data(rows).join('circle')
+      .attr('cx', (d) => x(d.jours_detention)).attr('cy', (d) => y(d.tri)).attr('r', (d) => rr(d.investi))
+      .style('fill', (d) => (d.statut === 'Remboursé' ? 'var(--s2)' : 'var(--s1)')).attr('fill-opacity', .5)
+      .style('stroke', (d) => (d.statut === 'Remboursé' ? 'var(--s2)' : 'var(--s1)'))
+      .on('mousemove', (ev, d) => tipShow(tip, card, ev, d.projet, [
+        { c: d.statut === 'Remboursé' ? 'var(--s2)' : 'var(--s1)', t: 'TRI · ' + pct(d.tri) },
+        { t: 'Placé · ' + eur(d.investi) }, { t: 'Revenus · ' + eur2(d.revenus) },
+        { t: 'Détenu · ' + num(d.jours_detention) + ' jours' }
+      ]))
+      .on('mouseleave', () => { tip.style.opacity = '0'; });
+  }
+
+  const safe = (fn) => { try { fn(); } catch (e) { if (window.console) console.warn('graphique', e); } };
+
+  /* ---------- projection ---------- */
+  let horizon = 12, reinvest = true, tauxSaisi = null, apport = 0;
+  try {
+    const h = localStorage.getItem('bk-horizon'), r = localStorage.getItem('bk-reinvest');
+    const t = localStorage.getItem('bk-taux'), ap = localStorage.getItem('bk-apport');
+    if (['12', '24', '36', '60'].includes(h)) horizon = Number(h);
+    if (r === '0') reinvest = false;
+    if (t !== null && t !== '' && isFinite(+t)) tauxSaisi = +t;
+    if (ap !== null && isFinite(+ap)) apport = Math.max(0, +ap);
+  } catch (e) { /* stockage indisponible */ }
+
+  /* Référence : ce que le portefeuille a réellement servi sur les 12 derniers mois */
+  function reference() {
+    const m = data.mensuel.slice(-12);
+    if (!m.length) return { taux: 0, impot: 0, mois: 0, revenus: 0, encours: 0 };
+    const revenus = m.reduce((a, r) => a + (+r.revenus || 0), 0);
+    const impots = m.reduce((a, r) => a + (+r.impots || 0), 0);
+    const encours = m.reduce((a, r) => a + (+r.encours || 0), 0) / m.length;
+    return {
+      taux: encours > 0 ? (revenus / m.length * 12) / encours * 100 : 0,
+      impot: revenus > 0 ? impots / revenus : 0,
+      mois: m.length, revenus: revenus, encours: encours,
+      mensuelRecent: m.slice(-3).reduce((a, r) => a + (+r.revenus_nets || 0), 0) / Math.min(3, m.length)
+    };
+  }
+
+  function projeter() {
+    const ref = reference();
+    const tauxAn = tauxSaisi === null ? ref.taux : tauxSaisi;
+    const tauxMois = tauxAn / 100 / 12;
+    const depart = new Date(data.synthese.date_export + 'T00:00:00Z');
+    let capital = +data.synthese.encours || 0, cumul = 0;
+    const pts = [];
+    for (let i = 1; i <= horizon; i++) {
+      const brut = capital * tauxMois;
+      const net = brut * (1 - ref.impot);
+      cumul += net;
+      const d = new Date(Date.UTC(depart.getUTCFullYear(), depart.getUTCMonth() + i, 1));
+      pts.push({ d: d, mois: i, net: net, brut: brut, cumul: cumul, capital: capital });
+      capital += apport + (reinvest ? net : 0);
+    }
+    return { ref: ref, tauxAn: tauxAn, pts: pts, cumul: cumul, capitalFinal: capital };
+  }
+
+  function drawProjection() {
+    if (!data) return;
+    const p = projeter(), ref = p.ref;
+    const net = (v) => eur2(v);
+
+    $('pj-total').textContent = net(p.cumul);
+    $('pj-total-n').textContent = 'sur ' + (horizon === 60 ? '5 ans' : horizon + ' mois');
+    $('pj-moyen').textContent = net(p.pts.length ? p.cumul / p.pts.length : 0);
+    $('pj-actuel').textContent = net(ref.mensuelRecent || 0);
+    $('pj-capital').textContent = eur(p.capitalFinal);
+    $('pj-capital-n').textContent = reinvest
+      ? 'revenus réinvestis' + (apport > 0 ? ' et ' + eur(apport) + ' par mois' : '')
+      : (apport > 0 ? eur(apport) + ' d’apport par mois, revenus non réinvestis' : 'revenus non réinvestis');
+    $('pj-net').textContent = pct(p.tauxAn * (1 - ref.impot));
+    $('pj-impot').textContent = pct1(ref.impot * 100);
+    $('proj-base').textContent = 'Référence : ' + eur2(ref.revenus) + ' de revenus bruts sur '
+      + num(ref.mois) + ' mois, pour un capital moyen investi de ' + eur(ref.encours)
+      + ', soit ' + pct(ref.taux) + ' brut par an.';
+    $('pj-risque').textContent = (+data.synthese.nb_retard || 0) > 0
+      ? num(data.synthese.nb_retard) + ' de vos projets ne versent plus, pour '
+        + eur(data.synthese.encours_retard) + ' de capital : ce capital est pourtant compté comme productif ici.'
+      : 'Aucun de vos projets n’est en retard de versement à ce jour.';
+
+    /* tableau année par année */
+    const parAn = {};
+    p.pts.forEach((r) => {
+      const an = r.d.getUTCFullYear();
+      if (!parAn[an]) parAn[an] = { an: an, mois: 0, net: 0, cumul: 0, capital: 0 };
+      parAn[an].mois++; parAn[an].net += r.net; parAn[an].cumul = r.cumul; parAn[an].capital = r.capital;
+    });
+    const tbody = $('t-projection').querySelector('tbody');
+    const frag = document.createDocumentFragment();
+    Object.keys(parAn).sort().forEach((k) => {
+      const r = parAn[k];
+      const tr = document.createElement('tr');
+      [String(r.an), num(r.mois), eur2(r.net), eur2(r.cumul), eur(r.capital)].forEach((v, i) => {
+        const td = document.createElement('td');
+        if (i) td.className = 'cnum';
+        td.textContent = v;
+        tr.append(td);
+      });
+      frag.append(tr);
+    });
+    tbody.replaceChildren(frag);
+
+    /* courbe du cumul */
+    const el = $('c-projection');
+    const card = el.closest('.card');
+    const W = Math.max(300, el.clientWidth || 600), H = Math.max(230, Math.min(330, W * 0.5));
+    const svg = mkSvg(el, W, H);
+    if (!p.pts.length) return;
+    const maxY = d3.max(p.pts, (r) => r.cumul) || 1;
+    const m = { t: 10, r: 10, b: 24, l: tw(svg, d3.ticks(0, maxY, 5).map(eur), 10.5) + 10 };
+    const x = d3.scaleUtc(d3.extent(p.pts, (r) => r.d), [m.l, W - m.r]);
+    const y = d3.scaleLinear([0, maxY], [H - m.b, m.t]).nice();
+    grid(svg, y, m.l, W - m.r);
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 72))).tickFormat(mLab).tickSizeOuter(0)).call(axis);
+    svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(eur).tickSizeOuter(0)).call(axis);
+    const g = svg.append('defs').append('linearGradient').attr('id', 'gproj')
+      .attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 1);
+    [[0, .3], [.25, .18], [.5, .09], [.75, .03], [1, 0]].forEach(([o, op]) =>
+      g.append('stop').attr('offset', o).attr('stop-opacity', op).attr('style', 'stop-color: var(--s1)'));
+    svg.append('path').datum(p.pts).attr('fill', 'url(#gproj)')
+      .attr('d', d3.area().x((r) => x(r.d)).y0(y(0)).y1((r) => y(r.cumul)));
+    svg.append('path').datum(p.pts).attr('fill', 'none').style('stroke', 'var(--s1)')
+      .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+      .attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r.cumul)));
+    const dernier = p.pts[p.pts.length - 1];
+    svg.append('circle').attr('cx', x(dernier.d)).attr('cy', y(dernier.cumul)).attr('r', 3.5).style('fill', 'var(--s1)');
+    const tip = tipOf(card);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', Math.max(1, W - m.l - m.r))
+      .attr('height', Math.max(1, H - m.t - m.b)).attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const px = d3.pointer(ev, svg.node())[0];
+        const r = p.pts[d3.leastIndex(p.pts, (q) => Math.abs(x(q.d) - px))];
+        tipShow(tip, card, ev, mLab(r.d), [
+          { c: 'var(--s1)', t: 'Cumul net · ' + eur2(r.cumul) },
+          { t: 'Ce mois-là · ' + eur2(r.net) },
+          { t: 'Capital investi · ' + eur(r.capital) }
+        ]);
+      })
+      .on('mouseleave', () => { tip.style.opacity = '0'; });
+  }
+
+  let redraw = () => {};
+  function renderAll() {
+    renderMeta();
+    $('vide').hidden = !!data;
+    $('corps').hidden = !data;
+    $('btn-reset').hidden = !data || !peutEcrire;
+    $('vide-titre').textContent = dbPret ? 'Aucun export importé' : 'Chargement de votre portefeuille';
+    $('btn-import-2').hidden = !dbPret || !peutEcrire;
+    renderValues();
+    if (!data) return;
+
+    const CL = (v) => B.LBL[v] || v || 'Non défini';
+    table('t-contrats', [
+      { k: 'contrat' }, { k: 'nb_projets', num: true, f: num }, { k: 'investi', num: true, f: eur },
+      { k: 'encours', num: true, f: eur }, { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }
+    ], () => data.contrats, { sort: 'investi' });
+
+    const enRetard = () => data.projets.filter((p) => p.vigilance === 'Retard');
+    const mois = (v) => n1.format(+v) + ' mois';
+    const jours = (v) => 'tous les ' + num(v) + ' j';
+
+    table('t-vigilance', [
+      { k: 'projet' }, { k: 'contrat', f: CL }, { k: 'mois_retard', num: true, f: mois },
+      { k: 'encours', num: true, f: eur }, { k: 'dernier_revenu', f: dmy }
+    ], enRetard, { sort: 'mois_retard', limit: 5 });
+
+    table('t-retard', [
+      { k: 'projet' }, { k: 'mois_retard', num: true, f: mois }, { k: 'encours', num: true, f: eur },
+      { k: 'manque_a_gagner', num: true, f: eur2 }, { k: 'dernier_revenu', f: dmy },
+      { k: 'cadence_jours', num: true, f: jours }, { k: 'retard_base', f: (v) => MESURE[v] || v }
+    ], enRetard, { sort: 'mois_retard', countEl: 'n-retard' });
+
+    table('t-projets', [
+      { k: 'projet' }, { k: 'contrat', f: CL }, { k: 'investi', num: true, f: eur },
+      { k: 'capital_rembourse', num: true, f: eur2 }, { k: 'pct_rembourse', num: true, bar: true },
+      { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }, { k: 'tri', num: true, f: pct },
+      { k: 'nb_versements', num: true, f: num }, { k: 'jours_detention', num: true, f: num }, { k: 'statut', pill: true }
+    ], () => data.projets, { sort: 'investi', countEl: 'n-projets', filterKey: 'statut' });
+
+    table('t-ops', [
+      { k: 'date', f: dmy }, { k: 'type' }, { k: 'projet' }, { k: 'contrat', f: CL },
+      { k: 'montant', num: true, f: eur2, neg: true }
+    ], () => txRows, { sort: 'date', countEl: 'n-ops', limit: 400 });
+
+    redraw = () => { safe(drawCapital); safe(drawRevenus); safe(drawContrats); safe(drawTop); safe(drawTri); safe(drawProjection); };
+    redraw();
+  }
+
+  /* ---------- onglets ---------- */
+  const PANELS = ['vue', 'projets', 'projection', 'ops', 'methode'];
+  function selectTab(id) {
+    PANELS.forEach((p) => {
+      const panel = $('p-' + p), tab = $('tab-' + p);
+      if (panel) panel.hidden = p !== id;
+      if (tab) tab.setAttribute('aria-selected', p === id ? 'true' : 'false');
+    });
+    try { localStorage.setItem('bk-tab', id); } catch (e) {}
+    redraw();
+  }
+  PANELS.forEach((p) => { const t = $('tab-' + p); if (t) t.addEventListener('click', () => selectTab(p)); });
+
+  /* ---------- recherche ---------- */
+  const bind = (inputId, tblId, key) => {
+    const i = $(inputId);
+    if (!i) return;
+    i.addEventListener('input', () => { const st = TS[tblId]; if (st) { st[key] = i.value.trim(); st.draw(); } });
+  };
+  bind('q-projets', 't-projets', 'q');
+  bind('q-ops', 't-ops', 'q');
+  bind('q-retard', 't-retard', 'q');
+  $('f-projets').addEventListener('change', () => { const st = TS['t-projets']; if (st) { st.filter = $('f-projets').value; st.draw(); } });
+
+  const memoriser = (cle, valeur) => { try { localStorage.setItem(cle, valeur); } catch (e) {} };
+  const segments = Array.from(document.querySelectorAll('#seg-periode button'));
+  const majSegments = () => segments.forEach((b) => b.setAttribute('aria-pressed', b.dataset.p === periode ? 'true' : 'false'));
+  segments.forEach((b) => b.addEventListener('click', () => {
+    periode = b.dataset.p;
+    memoriser('bk-periode', periode);
+    majSegments();
+    if (data) safe(drawRevenus);
+  }));
+  $('f-net').addEventListener('change', () => {
+    mode = $('f-net').checked ? 'net' : 'brut';
+    memoriser('bk-mode', mode);
+    if (data) safe(drawRevenus);
+  });
+
+  const horizons = Array.from(document.querySelectorAll('#seg-horizon button'));
+  const majHorizons = () => horizons.forEach((b) => b.setAttribute('aria-pressed', Number(b.dataset.h) === horizon ? 'true' : 'false'));
+  const rejouer = () => { if (data) safe(drawProjection); };
+  horizons.forEach((b) => b.addEventListener('click', () => {
+    horizon = Number(b.dataset.h);
+    memoriser('bk-horizon', String(horizon));
+    majHorizons();
+    rejouer();
+  }));
+  $('p-reinvest').addEventListener('change', () => {
+    reinvest = $('p-reinvest').checked;
+    memoriser('bk-reinvest', reinvest ? '1' : '0');
+    rejouer();
+  });
+  $('p-taux').addEventListener('input', () => {
+    const v = parseFloat($('p-taux').value);
+    tauxSaisi = isFinite(v) && v >= 0 ? Math.min(v, 40) : null;
+    memoriser('bk-taux', tauxSaisi === null ? '' : String(tauxSaisi));
+    rejouer();
+  });
+  $('p-apport').addEventListener('input', () => {
+    const v = parseFloat($('p-apport').value);
+    apport = isFinite(v) && v > 0 ? Math.min(v, 100000) : 0;
+    memoriser('bk-apport', String(apport));
+    rejouer();
+  });
+  $('p-reset').addEventListener('click', () => {
+    tauxSaisi = null; apport = 0;
+    memoriser('bk-taux', ''); memoriser('bk-apport', '0');
+    if (data) { $('p-taux').value = String(Math.round(reference().taux * 100) / 100); $('p-apport').value = '0'; }
+    rejouer();
+  });
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => redraw(), 160); });
+
+  /* ---------- stockage local ---------- */
+  function lire(cle, defaut) {
+    try {
+      const brut = localStorage.getItem(cle);
+      return brut ? JSON.parse(brut) : defaut;
+    } catch (e) { return defaut; }
+  }
+
+  function charger() {
+    dbPret = true;
+    $('actions').hidden = false;
+    try {
+      localStorage.setItem('bricks.test', '1');
+      localStorage.removeItem('bricks.test');
+    } catch (e) {
+      stockageOk = false;
+    }
+    const d = lire(CLE, null);
+    if (d && d.synthese) {
+      data = { synthese: d.synthese, projets: d.projets || [], mensuel: d.mensuel || [], contrats: d.contrats || [], meta: d.meta || {} };
+      txRows = lire(CLE_TX, []);
+    }
+    renderAll();
+    if (!stockageOk) {
+      $('vide-note').textContent = 'Votre navigateur refuse l’enregistrement local (navigation privée ?). '
+        + 'Un import restera visible le temps de la session, puis disparaîtra.';
+    }
+  }
+
+  async function save(res) {
+    if (!stockageOk) return 'sans-stockage';
+    try {
+      localStorage.setItem(CLE, JSON.stringify({
+        synthese: res.synthese, projets: res.projets, mensuel: res.mensuel,
+        contrats: res.contrats, meta: res.meta
+      }));
+      localStorage.setItem(CLE_TX, JSON.stringify(res.transactions));
+      return 'ok';
+    } catch (e) {
+      const quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+      if (quota) { try { localStorage.removeItem(CLE_TX); } catch (e2) {} }
+      return quota ? 'quota' : 'erreur:' + ((e && e.name) || 'inconnue');
+    }
+  }
+
+  /* ---------- import ---------- */
+  $('btn-import').addEventListener('click', () => $('file').click());
+  $('btn-import-2').addEventListener('click', () => { if (peutEcrire) $('file').click(); });
+  $('file').addEventListener('change', async (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!f) return;
+    if (!window.XLSX) {
+      flash('err', 'Le lecteur de fichiers n’a pas pu être chargé. Rechargez la page, puis réessayez.');
+      return;
+    }
+    flash('info', 'Lecture de ' + f.name + '…');
+    try {
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { raw: true, defval: null });
+      const nr = B.normalizeRows(raw);
+      if (nr.erreur) { flash('err', nr.erreur); return; }
+      if (!nr.rows.length) { flash('err', 'Aucune opération validée trouvée dans ce fichier.'); return; }
+      const res = B.analyser(nr.rows, {
+        fichier: f.name, importeLe: new Date().toISOString(), ignorees: nr.ignorees, inconnus: nr.inconnus
+      });
+      const etat = await save(res);
+      data = { synthese: res.synthese, projets: res.projets, mensuel: res.mensuel, contrats: res.contrats, meta: res.meta };
+      txRows = res.transactions;
+      renderAll();
+      const inc = Object.keys(nr.inconnus || {});
+      const parts = ['Import de ', strong(f.name), ' : ', strong(n0.format(res.synthese.nb_transactions) + ' opérations'),
+        ' sur ', strong(n0.format(res.synthese.nb_projets) + ' projets'), ', export arrêté au ',
+        strong(dmy(res.synthese.date_export)), '.'];
+      if (inc.length) parts.push(' Types d’opération non reconnus et ignorés : ' + inc.join(', ') + '.');
+      if (etat === 'quota') parts.push(' Le détail des opérations n’a pas pu être enregistré, faute de place dans le navigateur : les totaux et les projets le sont, l’onglet Opérations sera vide au prochain chargement.');
+      else if (etat === 'sans-stockage') parts.push(' Ces chiffres ne sont pas enregistrés et disparaîtront au rechargement : votre navigateur refuse le stockage local.');
+      else if (etat !== 'ok') parts.push(' L’enregistrement a échoué (' + etat.split(':')[1] + ') : les chiffres s’affichent mais ne sont pas conservés.');
+      flash(etat === 'ok' ? 'ok' : 'err', parts, [{ label: 'Fermer', onClick: flashOff }]);
+    } catch (e) {
+      flash('err', 'Lecture impossible : ' + (e && e.message ? e.message : 'format non reconnu')
+        + '. Vérifiez qu’il s’agit bien de l’export des transactions de votre wallet Bricks.');
+    }
+  });
+
+  /* ---------- réinitialisation ---------- */
+  $('btn-reset').addEventListener('click', () => {
+    if (!resetArme) {
+      resetArme = true;
+      flash('err', 'Supprimer définitivement les données importées de ce navigateur ?', [
+        {
+          label: 'Oui, tout supprimer', variant: 'danger', onClick: async () => {
+            flash('info', 'Suppression…');
+            try {
+              try { localStorage.removeItem(CLE); localStorage.removeItem(CLE_TX); } catch (e) {}
+              data = null; txRows = [];
+              renderAll();
+              flash('ok', 'Données supprimées. Importez un export pour repartir.', [{ label: 'Fermer', onClick: flashOff }]);
+            } catch (e) {
+              flash('err', 'Suppression impossible : ' + (e && e.message ? e.message : 'erreur inconnue'));
+            }
+            resetArme = false;
+          }
+        },
+        { label: 'Annuler', onClick: flashOff }
+      ]);
+    }
+  });
+
+  /* ---------- démarrage ---------- */
+  majSegments();
+  majHorizons();
+  $('f-net').checked = mode === 'net';
+  $('p-reinvest').checked = reinvest;
+  $('p-apport').value = String(apport);
+  renderAll();
+  try {
+    const t = localStorage.getItem('bk-tab');
+    if (t && PANELS.includes(t)) selectTab(t);
+  } catch (e) {}
+  charger();
+  document.querySelectorAll('.cell').forEach((el, i) => { el.classList.add('rise'); el.style.animationDelay = (i * 35) + 'ms'; });
+})();
+</script>
+
+</body>
+</html>

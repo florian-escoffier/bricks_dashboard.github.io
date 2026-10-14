@@ -151,6 +151,18 @@ Les colonnes de l'export sont reconnues par leur nom, pas par leur position : un
 réordonnancement côté Bricks n'empêche pas l'import. Un type d'opération inconnu est
 ignoré et signalé nommément.
 
+## Opérations en traitement
+
+Seules les opérations **validées** entrent dans les calculs. Les refusées et les annulées
+sont écartées sans bruit : elles n'ont jamais eu lieu. Celles encore **en traitement** le
+sont aussi, Bricks pouvant encore les refuser, mais un bandeau en tête de page les
+annonce — leur nombre, leur type et, quand elles vont toutes dans le même sens, leur
+montant total.
+
+C'est le plus souvent un virement ou un achat en cours de validation, et cela explique un
+écart passager entre le solde affiché ici et celui de la plateforme. Le bandeau disparaît
+de lui-même au prochain import, une fois ces opérations validées côté Bricks.
+
 ## Durées et taux annoncés : `projets.json`
 
 L'export Bricks ne contient ni la durée ni le taux promis d'un projet. Ces deux
@@ -194,6 +206,25 @@ et la correction vaut pour tous vos appareils.
 
 Si le fichier est absent, l'application fonctionne normalement : les deux colonnes sont
 alors entièrement marquées *données manquantes*, et rien d'autre ne change.
+
+## Évolution du portefeuille
+
+Le premier graphique de la **Vue d'ensemble** se lit selon trois séries, au choix :
+
+| | |
+|---|---|
+| **Capital investi** | capital placé moins les remboursements reçus, à la fin de chaque mois : le montant réellement exposé. |
+| **Capital remboursé** | capital rendu par les projets, cumulé depuis l'origine. |
+| **Patrimoine** | versements effectués sur le wallet, moins les retraits, plus les revenus et les primes, moins le prélèvement à la source. |
+
+Le patrimoine vaut, à l'euro près, le capital investi restant augmenté du solde disponible
+du wallet — l'application le vérifie mois par mois. Un revenu réinvesti en bricks ne le
+fait donc pas monter deux fois : il passe simplement du wallet aux projets. Un retrait vers
+le compte bancaire le diminue, l'argent ayant quitté la plateforme.
+
+Le choix est mémorisé dans ce navigateur. Un portefeuille importé avec une version
+antérieure de l'application ne comporte pas les cumuls nécessaires : la série *Patrimoine*
+reste alors grisée jusqu'au prochain import.
 
 ## Remboursements
 

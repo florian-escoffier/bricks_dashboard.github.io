@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DgrRigM8a8qJfc6kQeH1IHiZ6CGWt+YPvAO2audYSG8=' 'sha256-zJs3+F+5g4y5jHMh8KNPGaWDwlFePfxxAg6cj0tUSrE=' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-m1zzzVbB0vmQsINprsaDvcTrwFv3aZRNOg6FG5liFbU=' 'sha256-Tq0jFWwz8gKhEqTKzI3zvXFtUHKvswRDd1qvYY3CRAU=' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Portefeuille Bricks</title>
 <meta name="description" content="Suivi de portefeuille Bricks. Vos données restent dans votre navigateur.">
@@ -83,6 +83,14 @@
   .flash .btn { padding: 4px 10px; }
   .flash-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 
+  /* bandeau des opérations en traitement */
+  .avis { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; padding: 10px 14px;
+          border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-radius: var(--radius);
+          background: color-mix(in srgb, var(--warn) 7%, var(--panel)); font-size: .86rem; }
+  .avis svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--warn); }
+  .avis b { font-weight: 500; color: var(--ink); }
+  .avis span { color: var(--muted); }
+
   /* bandeau de chiffres */
   .ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
             gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius);
@@ -162,6 +170,8 @@
   .seg button:hover { color: var(--ink); }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
   .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .seg button:disabled { opacity: .4; cursor: not-allowed; }
+  .seg button:disabled:hover { color: var(--muted); }
 
   /* Interrupteur brut / net */
   .switch { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
@@ -315,6 +325,11 @@
     </div>
   </header>
 
+  <div class="avis" id="avis-traitement" role="status" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span id="avis-traitement-t"></span>
+  </div>
+
   <div class="flash" id="flash" hidden>
     <div class="flash-t" id="flash-t"></div>
   </div>
@@ -353,12 +368,19 @@
     <div id="p-vue" role="tabpanel" aria-labelledby="tab-vue">
       <section class="sec">
         <div class="sec-h">
-          <h2>Évolution du capital</h2>
-          <p>Capital placé diminué des remboursements reçus, à la fin de chaque mois : le montant réellement exposé.</p>
+          <h2>Évolution du portefeuille</h2>
+          <p>Mois après mois : le capital engagé, celui déjà rendu, le patrimoine constitué, et les revenus encaissés.</p>
         </div>
         <div class="cards">
           <div class="card">
-            <div class="card-h"><h3>Capital investi</h3><span id="sub-capital">À la fin de chaque mois</span></div>
+            <div class="card-h"><h3 id="cap-titre">Capital investi</h3><span id="sub-capital">À la fin de chaque mois</span></div>
+            <div class="tools">
+              <div class="seg" id="seg-capital" role="group" aria-label="Série affichée">
+                <button type="button" data-s="encours" aria-pressed="true">Capital investi</button>
+                <button type="button" data-s="cumul_rembourse" aria-pressed="false">Capital remboursé</button>
+                <button type="button" data-s="patrimoine" aria-pressed="false">Patrimoine</button>
+              </div>
+            </div>
             <div class="total">
               <div class="total-v" id="cap-total">—</div>
               <div class="total-l" id="cap-label"></div>
@@ -628,10 +650,12 @@
 
     <div id="p-methode" role="tabpanel" aria-labelledby="tab-methode" hidden>
       <section class="sec">
-        <div class="sec-h"><h2>Méthode de calcul</h2><p>Tous les chiffres sont établis à partir du seul export des transactions du wallet. Les opérations refusées et annulées sont écartées.</p></div>
+        <div class="sec-h"><h2>Méthode de calcul</h2><p>Tous les chiffres sont établis à partir du seul export des transactions du wallet. Seules les opérations validées sont retenues.</p></div>
         <div class="card">
+          <dl class="note"><dt>Opérations retenues</dt><dd>Une opération n’est comptée qu’une fois validée. Les opérations refusées et annulées sont écartées définitivement. Celles encore en traitement le sont aussi, Bricks pouvant encore les refuser, mais un bandeau les annonce en tête de page avec leur nombre : un virement en cours de validation explique à lui seul un écart passager entre le solde affiché ici et celui de la plateforme.</dd></dl>
           <dl class="note"><dt>Capital placé</dt><dd>Somme des achats de bricks et des achats sur la marketplace.</dd></dl>
           <dl class="note"><dt>Capital investi</dt><dd>Capital placé moins les remboursements de capital reçus : le montant réellement exposé aujourd’hui.</dd></dl>
+          <dl class="note"><dt>Patrimoine</dt><dd>Ce que le portefeuille a produit par rapport à l’argent apporté : versements effectués sur le wallet, diminués des retraits, augmentés des revenus et des primes, et diminués du prélèvement à la source. Il vaut, à l’euro près, le capital investi restant plus le solde disponible du wallet. Les réinvestissements n’y comptent donc qu’une fois : un revenu replacé en bricks ne gonfle pas le patrimoine, il change seulement de ligne. Un retrait vers le compte bancaire le diminue, l’argent étant sorti de la plateforme.</dd></dl>
           <dl class="note"><dt>Revenus</dt><dd>Lignes « Revenus reversés » : loyers et intérêts, avant impôt. Les remboursements de capital n’y sont pas comptés.</dd></dl>
           <dl class="note"><dt>Primes et bonus</dt><dd>Primes de parrainage, solde boosté et gestes commerciaux. Ils entrent dans les revenus encaissés et dans le total de la période, mais ni dans le rendement ni dans le TRI d’un projet, n’étant pas produits par le capital placé. Le prélèvement ne portant que sur les revenus des projets, ils sont affichés sans retenue.</dd></dl>
           <dl class="note"><dt>Revenus nets</dt><dd>Revenus moins le prélèvement à la source. Le prélèvement n’étant pas rattaché à un projet dans l’export, il reste global.</dd></dl>
@@ -727,13 +751,25 @@ var BRICKS = (function () {
       return { rows: [], erreur: 'Colonnes introuvables : ' + manque.join(', ') + '. Attendu un export de transactions Bricks avec les colonnes date, type, statut, propriété, type de contrat et montant.' };
     }
     var rows = [], ignorees = 0, inconnus = {}, i, n = 0;
+    /* Une opération encore en traitement n'est pas un mouvement acquis : elle
+       reste hors des calculs, mais son existence est signalée, car elle
+       explique un écart avec ce qu'affiche Bricks. */
+    var attente = { nb: 0, montant: 0, montantAbs: 0, types: {} };
     for (i = 0; i < raw.length; i++) {
       var r = raw[i];
       var d = parseDate(r[map.date]);
       var t = String(r[map.type] == null ? '' : r[map.type]).trim();
       if (!d || !t) { ignorees++; continue; }
       var st = map.statut ? norm(r[map.statut]) : 'validee';
-      if (st && st !== 'validee') continue;
+      if (st && st !== 'validee') {
+        if (/traitement|attente|en cours|pending/.test(st)) {
+          attente.nb++;
+          attente.montant += parseNum(r[map.montant]);
+          attente.montantAbs += Math.abs(parseNum(r[map.montant]));
+          attente.types[t] = (attente.types[t] || 0) + 1;
+        }
+        continue;
+      }
       var nt = norm(t);
       var cat = ACHAT.indexOf(nt) > -1 ? 'achat' : nt === CAP ? 'capital' : nt === REV ? 'revenu'
         : nt === TAX ? 'impot' : BONUS.indexOf(nt) > -1 ? 'bonus' : DEPOT.indexOf(nt) > -1 ? 'depot'
@@ -753,7 +789,8 @@ var BRICKS = (function () {
     }
     rows.sort(function (a, b) { return a.d - b.d || a.ref.localeCompare(b.ref); });
     rows.forEach(function (r, i) { r.ref = 'T' + ('0000' + (i + 1)).slice(-5); });
-    return { rows: rows, ignorees: ignorees, inconnus: inconnus };
+    attente.montant = r2(attente.montant); attente.montantAbs = r2(attente.montantAbs);
+    return { rows: rows, ignorees: ignorees, inconnus: inconnus, enTraitement: attente };
   }
 
   /* ---- TRI (XIRR) par bissection ---- */
@@ -893,7 +930,7 @@ var BRICKS = (function () {
       else if (r.cat === 'depot') m.depots += r.montant;
       else if (r.cat === 'retrait') m.retraits += -r.montant;
     }
-    var mensuel = [], ci = 0, cr = 0, crev = 0, cimp = 0;
+    var mensuel = [], ci = 0, cr = 0, crev = 0, cimp = 0, cbon = 0, cdep = 0, cret = 0;
     var cur = utc(debut.getUTCFullYear(), debut.getUTCMonth(), 1);
     var fin = utc(asof.getUTCFullYear(), asof.getUTCMonth(), 1);
     while (cur <= fin) {
@@ -901,13 +938,21 @@ var BRICKS = (function () {
       var mm = M[mk] || { achats: 0, remboursements: 0, revenus: 0, impots: 0, bonus: 0, depots: 0, retraits: 0,
                           rev_obligation: 0, rev_loan: 0, rev_royalty: 0, rev_autre: 0 };
       ci += mm.achats; cr += mm.remboursements; crev += mm.revenus; cimp += mm.impots;
+      cbon += mm.bonus; cdep += mm.depots; cret += mm.retraits;
       mensuel.push({
         mois: mk, achats: r2(mm.achats), remboursements: r2(mm.remboursements), revenus: r2(mm.revenus),
         impots: r2(mm.impots), bonus: r2(mm.bonus), revenus_nets: r2(mm.revenus - mm.impots),
+        depots: r2(mm.depots), retraits: r2(mm.retraits),
         rev_obligation: r2(mm.rev_obligation), rev_loan: r2(mm.rev_loan),
         rev_royalty: r2(mm.rev_royalty), rev_autre: r2(mm.rev_autre),
         cumul_investi: r2(ci), cumul_rembourse: r2(cr), cumul_revenus: r2(crev), cumul_impots: r2(cimp),
-        encours: r2(ci - cr)
+        cumul_bonus: r2(cbon), cumul_depots: r2(cdep), cumul_retraits: r2(cret),
+        encours: r2(ci - cr),
+        /* Patrimoine : apports extérieurs nets, augmentés de tout ce que la
+           plateforme a versé. Vaut, à l'euro près, l'encours plus le solde du
+           wallet — les réinvestissements ne comptent donc qu'une fois. */
+        solde_wallet: r2(cdep - cret - ci + cr + crev + cbon - cimp),
+        patrimoine: r2(cdep - cret + crev + cbon - cimp)
       });
       cur = utc(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 1);
     }
@@ -997,7 +1042,8 @@ var BRICKS = (function () {
       meta: {
         fichier: (meta && meta.fichier) || '', importeLe: (meta && meta.importeLe) || new Date().toISOString(),
         asof: iso(asof), debut: iso(debut), nb: rows.length,
-        ignorees: (meta && meta.ignorees) || 0, inconnus: (meta && meta.inconnus) || {}
+        ignorees: (meta && meta.ignorees) || 0, inconnus: (meta && meta.inconnus) || {},
+        enTraitement: (meta && meta.enTraitement) || { nb: 0, montant: 0, montantAbs: 0, types: {} }
       },
       transactions: rows.map(function (r) {
         return { ref: r.ref, date: r.date, type: r.type, projet: r.projet, contrat: r.contrat, montant: r2(r.montant) };
@@ -1117,7 +1163,38 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     }
   }
 
+  /* Une opération au statut « en traitement » n'est pas encore un mouvement
+     acquis : Bricks peut encore la refuser. Elle reste donc hors des calculs,
+     et le bandeau l'annonce, faute de quoi l'écart avec la plateforme
+     paraîtrait inexpliqué. */
+  function renderTraitement() {
+    const avis = $('avis-traitement'), cible = $('avis-traitement-t');
+    const t = (data && data.meta && data.meta.enTraitement) || null;
+    const nb = t ? +t.nb || 0 : 0;
+    avis.hidden = !nb;
+    cible.textContent = '';
+    if (!nb) return;
+    const gras = document.createElement('b');
+    gras.textContent = num(nb) + (nb > 1 ? ' opérations en traitement' : ' opération en traitement');
+    cible.append(gras);
+    const noms = Object.keys(t.types || {})
+      .sort((a, b) => t.types[b] - t.types[a] || a.localeCompare(b, 'fr'));
+    const liste = noms.slice(0, 3)
+      .map((n) => n.toLowerCase() + (t.types[n] > 1 ? ' ×' + num(t.types[n]) : ''))
+      .join(', ') + (noms.length > 3 ? ', et ' + num(noms.length - 3) + ' autre type' + (noms.length > 4 ? 's' : '') : '');
+    /* Le montant n'est annoncé que si tous ces mouvements vont dans le même
+       sens : additionner une entrée et une sortie ne voudrait rien dire. */
+    const meme = Math.abs(Math.abs(+t.montant || 0) - (+t.montantAbs || 0)) < 0.005;
+    const suite = document.createElement('span');
+    suite.textContent = ' dans cet export' + (noms.length ? ' (' + liste + ')' : '')
+      + (meme && t.montantAbs > 0.005 ? ', pour ' + eur2(t.montantAbs) : '')
+      + '. ' + (nb > 1 ? 'Elles ne sont pas comptées' : 'Elle n’est pas comptée')
+      + ' dans les chiffres ci-dessous, qui ne retiennent que les opérations validées.';
+    cible.append(suite);
+  }
+
   function renderValues() {
+    renderTraitement();
     document.querySelectorAll('[data-f]').forEach((el) => {
       const f = el.getAttribute('data-f');
       const v = data ? data.synthese[f] : null;
@@ -1129,7 +1206,6 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
         ? num(nr) + (nr > 1 ? ' projets concernés, ' : ' projet concerné, ') + eur(data.synthese.encours_retard) + ' de capital'
         : 'Aucun retard de versement';
       $('note-vigilance').textContent = nr > 5 ? 'Les ' + num(nr) + ' projets sont détaillés dans l’onglet Projets.' : '';
-      $('sub-capital').textContent = 'À la fin de chaque mois, depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7));
       $('seg-ytd').textContent = (data.synthese.date_export || '').slice(0, 4) || 'Année';
       /* un champ number n'accepte que le point décimal */
       if (!$('p-taux').value) $('p-taux').value = String(Math.round((tauxSaisi === null ? reference().tauxNet : tauxSaisi) * 100) / 100);
@@ -1412,17 +1488,75 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   }
 
   /* ---------- graphiques ---------- */
+  /* Trois lectures du même portefeuille, sur le même graphique. L'une suit le
+     capital encore exposé, l'autre le capital déjà rendu, la troisième le
+     patrimoine constitué — apports extérieurs nets, revenus et primes. */
+  const SERIES_CAP = {
+    encours: {
+      t: 'Capital investi', c: 'var(--s1)',
+      sous: (depuis) => 'Capital placé moins les remboursements reçus, à la fin de chaque mois' + depuis,
+      lignes: (r) => []
+        .concat(r.achats > 0.005 ? [{ t: 'Placé ce mois-là · +' + eur2(r.achats) }] : [])
+        .concat(r.rembourse > 0.005 ? [{ t: 'Remboursé ce mois-là · −' + eur2(r.rembourse) }] : [])
+    },
+    cumul_rembourse: {
+      t: 'Capital remboursé', c: 'var(--s3)',
+      sous: (depuis) => 'Capital rendu par les projets, cumulé' + (depuis || ' depuis l’origine'),
+      lignes: (r) => []
+        .concat(r.rembourse > 0.005 ? [{ t: 'Rendu ce mois-là · +' + eur2(r.rembourse) }] : [])
+        .concat([{ t: 'Reste à rendre · ' + eur(r.encours) }])
+    },
+    patrimoine: {
+      t: 'Patrimoine', c: 'var(--s2)',
+      sous: (depuis) => 'Apports nets, revenus et primes, cumulés' + (depuis || ' depuis l’origine'),
+      lignes: (r) => [
+        { t: 'Apports nets de retraits · ' + eur(r.apports) },
+        { t: 'Revenus nets d’impôt · ' + eur(r.revNets) },
+        { t: 'Primes et bonus · ' + eur(r.primes) },
+        { t: 'dont engagé dans les projets · ' + eur(r.encours) },
+        { t: 'dont disponible sur le wallet · ' + eur(r.wallet) }
+      ]
+    }
+  };
+  let serieCap = 'encours';
+  try {
+    const s = localStorage.getItem('bk-serie-capital');
+    if (s && SERIES_CAP[s]) serieCap = s;
+  } catch (e) { /* stockage indisponible : on garde la série par défaut */ }
+
+  function majSerieCap(complet) {
+    Array.from(document.querySelectorAll('#seg-capital button')).forEach((b) => {
+      b.setAttribute('aria-pressed', b.dataset.s === serieCap ? 'true' : 'false');
+      const bloque = !complet && b.dataset.s === 'patrimoine';
+      b.disabled = bloque;
+      if (bloque) b.title = 'Réimportez votre export pour afficher cette série.';
+      else b.removeAttribute('title');
+    });
+  }
+
   function drawCapital() {
     const el = $('c-capital');
     if (!el || !data) return;
     const card = el.closest('.card');
+    /* Un portefeuille enregistré par une version antérieure n'a pas les cumuls
+       nécessaires au patrimoine : la série est alors proposée sans être
+       disponible, et un nouvel import la rétablit. */
+    const complet = !data.mensuel.length || data.mensuel[0].patrimoine !== undefined;
+    if (!complet && serieCap === 'patrimoine') serieCap = 'encours';
+    majSerieCap(complet);
+    const serie = SERIES_CAP[serieCap];
     const rows = data.mensuel.map((r) => ({
-      d: new Date(r.mois + '-01T00:00:00Z'), total: +r.encours || 0,
-      achats: +r.achats || 0, rembourse: +r.remboursements || 0
+      d: new Date(r.mois + '-01T00:00:00Z'), total: +r[serieCap] || 0,
+      achats: +r.achats || 0, rembourse: +r.remboursements || 0, encours: +r.encours || 0,
+      apports: (+r.cumul_depots || 0) - (+r.cumul_retraits || 0),
+      revNets: (+r.cumul_revenus || 0) - (+r.cumul_impots || 0),
+      primes: +r.cumul_bonus || 0, wallet: +r.solde_wallet || 0
     }));
-    /* Le montant du dernier mois, c'est-à-dire le capital exposé à la date de
-       l'export : le même chiffre que la bande du haut, affiché sur le graphique
-       qui le raconte. */
+    $('cap-titre').textContent = serie.t;
+    $('sub-capital').textContent = serie.sous(data.synthese.premier_investissement
+      ? ' depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7)) : '');
+    /* Le montant du dernier mois, c'est-à-dire la valeur à la date de l'export,
+       affichée en clair au-dessus du graphique qui la raconte. */
     if (rows.length) {
       const dernier = rows[rows.length - 1];
       const an = rows.length > 12 ? rows[rows.length - 13].total : rows[0].total;
@@ -1449,23 +1583,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       .call(d3.axisLeft(y).ticks(5).tickFormat(eur).tickSizeOuter(0)).call(axis);
     const g = svg.append('defs').append('linearGradient').attr('id', 'gcap').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 1);
     [[0, .30], [.25, .18], [.5, .09], [.75, .03], [1, 0]].forEach(([o, op]) =>
-      g.append('stop').attr('offset', o).attr('stop-opacity', op).attr('style', 'stop-color: var(--s1)'));
+      g.append('stop').attr('offset', o).attr('stop-opacity', op).attr('style', 'stop-color: ' + serie.c));
     svg.append('path').datum(rows).attr('fill', 'url(#gcap)')
       .attr('d', d3.area().x((r) => x(r.d)).y0(y(0)).y1((r) => y(r.total)));
-    svg.append('path').datum(rows).attr('fill', 'none').style('stroke', 'var(--s1)')
+    svg.append('path').datum(rows).attr('fill', 'none').style('stroke', serie.c)
       .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
       .attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r.total)));
     const last = rows[rows.length - 1];
-    svg.append('circle').attr('cx', x(last.d)).attr('cy', y(last.total)).attr('r', 3.5).style('fill', 'var(--s1)');
+    svg.append('circle').attr('cx', x(last.d)).attr('cy', y(last.total)).attr('r', 3.5).style('fill', serie.c);
     const tip = tipOf(card);
     svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', Math.max(1, W - m.l - m.r)).attr('height', Math.max(1, H - m.t - m.b))
       .attr('fill', 'transparent')
       .on('mousemove', (ev) => {
         const px = d3.pointer(ev, svg.node())[0];
         const r = rows[d3.leastIndex(rows, (q) => Math.abs(x(q.d) - px))];
-        tipShow(tip, card, ev, mLab(r.d), [{ c: 'var(--s1)', t: 'Capital investi · ' + eur(r.total) }]
-          .concat(r.achats > 0.005 ? [{ t: 'Placé ce mois-là · +' + eur2(r.achats) }] : [])
-          .concat(r.rembourse > 0.005 ? [{ t: 'Remboursé ce mois-là · −' + eur2(r.rembourse) }] : []));
+        tipShow(tip, card, ev, mLab(r.d),
+          [{ c: serie.c, t: serie.t + ' · ' + eur(r.total) }].concat(serie.lignes(r)));
       })
       .on('mouseleave', () => { tip.style.opacity = '0'; });
   }
@@ -2349,6 +2482,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     majSegments();
     if (data) safe(drawRevenus);
   }));
+  Array.from(document.querySelectorAll('#seg-capital button')).forEach((b) => b.addEventListener('click', () => {
+    serieCap = b.dataset.s;
+    memoriser('bk-serie-capital', serieCap);
+    if (data) safe(drawCapital);
+  }));
   $('f-axe').addEventListener('change', () => {
     axeTri = $('f-axe').checked ? 'detention' : 'duree';
     memoriser('bk-axe-tri', axeTri);
@@ -2463,7 +2601,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       if (nr.erreur) { flash('err', nr.erreur); return; }
       if (!nr.rows.length) { flash('err', 'Aucune opération validée dans ce fichier.'); return; }
       const res = B.analyser(nr.rows, {
-        fichier: f.name, importeLe: new Date().toISOString(), ignorees: nr.ignorees, inconnus: nr.inconnus
+        fichier: f.name, importeLe: new Date().toISOString(), ignorees: nr.ignorees,
+        inconnus: nr.inconnus, enTraitement: nr.enTraitement
       });
       const etat = await save(res);
       data = { synthese: res.synthese, projets: res.projets, mensuel: res.mensuel, contrats: res.contrats, meta: res.meta };
@@ -2511,6 +2650,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   /* ---------- démarrage ---------- */
   majSegments();
   majHorizons();
+  majSerieCap(true);
   $('f-net').checked = mode === 'net';
   $('f-axe').checked = axeTri === 'detention';
   $('p-reinvest').checked = reinvest;

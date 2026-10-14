@@ -209,10 +209,15 @@
     #impression th, #impression td { text-align: right; padding: 1.1mm 1.6mm;
         border-bottom: .2pt solid #ccc; white-space: nowrap;
         font-variant-numeric: tabular-nums; }
+    /* Rien de collant ni de sombre sur le papier : un en-tête en position: sticky
+       disparaît à l'impression chez Safari, et la couleur d'écran serait illisible
+       sur blanc. Ces remises à zéro valent même si un style d'interface revenait
+       s'appliquer au tableau copié. */
     #impression thead th { border-bottom: .6pt solid #333; font-weight: 600;
-        font-size: 7pt; color: #000; }
+        font-size: 7pt; color: #000 !important; position: static !important;
+        top: auto !important; background: transparent !important; visibility: visible !important; }
     /* L'en-tête se répète en haut de chaque page, et aucune ligne n'est coupée. */
-    #impression thead { display: table-header-group; }
+    #impression thead { display: table-header-group !important; break-inside: avoid; }
     #impression tr { break-inside: avoid; page-break-inside: avoid; }
     #impression .nom { text-align: left; white-space: normal; }
     #impression .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 6.9pt; }
@@ -1870,6 +1875,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
        formats, aucun risque de divergence entre l'écran et le papier. */
     const copie = source.cloneNode(true);
     copie.removeAttribute('id');
+    /* La classe « t » porte les styles de l'écran, dont un en-tête en
+       position: sticky et une couleur pensée pour le fond sombre. À l'impression,
+       Safari escamote un en-tête collant : le tableau de papier n'hérite de rien
+       et se repose sur la feuille #impression. */
+    copie.removeAttribute('class');
     copie.querySelectorAll('thead th').forEach((th) => {
       const b = th.querySelector('button');
       if (b) th.textContent = b.textContent.replace(/[↑↓]\s*$/, '').trim();

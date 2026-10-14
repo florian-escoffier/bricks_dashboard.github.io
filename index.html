@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DgrRigM8a8qJfc6kQeH1IHiZ6CGWt+YPvAO2audYSG8=' 'sha256-RYXwkG9UsEQxlBwWGuORGXxmxWJIBALJ/wF04RHJKdA=' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Portefeuille Bricks</title>
 <meta name="description" content="Suivi de portefeuille Bricks. Vos données restent dans votre navigateur.">
@@ -2140,12 +2141,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const titre = document.createElement('h1');
     titre.className = 'titre';
     titre.textContent = 'Portefeuille Bricks — tous les projets';
+    /* Construit nœud par nœud plutôt qu'en assemblant du HTML : le texte des
+       filtres vient de ce que l'utilisateur tape, et aucune chaîne n'a à être
+       interprétée comme du balisage. L'application n'utilise plus innerHTML. */
     const chapeau = document.createElement('p');
     chapeau.className = 'chapeau';
-    chapeau.innerHTML = 'Export Bricks du <b>' + dmy(data.synthese.date_export) + '</b> · <b>'
-      + num(st.lignes.length) + '</b> projet' + (st.lignes.length > 1 ? 's' : '')
-      + ' sur ' + num(data.projets.length) + ' · ' + phraseFiltre()
-      + ' · trié par ' + phraseTri(st);
+    const gras = (t) => { const b = document.createElement('b'); b.textContent = t; return b; };
+    chapeau.append(
+      'Export Bricks du ', gras(dmy(data.synthese.date_export)), ' · ',
+      gras(num(st.lignes.length)),
+      ' projet' + (st.lignes.length > 1 ? 's' : '') + ' sur ' + num(data.projets.length)
+        + ' · ' + phraseFiltre() + ' · trié par ' + phraseTri(st));
     d.append(titre, chapeau);
     return d;
   }

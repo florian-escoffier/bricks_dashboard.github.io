@@ -58,8 +58,9 @@ La page charge trois ressources depuis des CDN publics : les polices Google Font
 `d3` (graphiques) et `SheetJS` (lecture des fichiers `.xlsx`). Ces serveurs voient votre
 adresse IP, jamais le contenu de votre portefeuille.
 
-Pour supprimer toute requête tierce, téléchargez les deux bibliothèques dans le dépôt et
-remplacez les `src` correspondants dans `index.html` :
+Les deux bibliothèques s'exécutent toutefois avec les mêmes droits que la page : elles
+peuvent lire le portefeuille. **La façon la plus sûre de les utiliser est de les héberger
+vous-même**, ce qui supprime à la fois le risque et les requêtes tierces :
 
 ```sh
 curl -o d3.min.js https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js
@@ -71,8 +72,54 @@ curl -o xlsx.full.min.js https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx
 <script src="xlsx.full.min.js"></script>
 ```
 
+Il faut alors remplacer `https://cdnjs.cloudflare.com` par `'self'` dans la directive
+`script-src` de la balise `Content-Security-Policy`, en tête du fichier.
+
+Si vous préférez garder le CDN, ajoutez au moins une empreinte à chaque balise : le
+navigateur refusera alors tout fichier modifié. Les deux commandes ci-dessous donnent
+les valeurs à coller.
+
+```sh
+curl -s https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js \
+  | openssl dgst -sha384 -binary | openssl base64 -A
+curl -s https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js \
+  | openssl dgst -sha384 -binary | openssl base64 -A
+```
+
+```html
+<script src="…/d3.min.js" integrity="sha384-LA_VALEUR" crossorigin="anonymous"></script>
+```
+
 Les polices se retirent en supprimant la balise `<link>` vers `fonts.googleapis.com` :
 la page bascule alors sur les polices système.
+
+### Politique de sécurité de contenu
+
+La page déclare une `Content-Security-Policy` en tête du document, GitHub Pages ne
+permettant pas d'ajouter d'en-tête HTTP. Elle autorise `connect-src 'self'` et
+`img-src 'self' data:`, c'est-à-dire **aucune communication vers un autre domaine** :
+même compromise, une bibliothèque du CDN ne pourrait pas faire sortir le portefeuille par
+`fetch`, `XMLHttpRequest`, `sendBeacon`, balise image, script, WebSocket ou formulaire.
+Les scripts de l'application sont autorisés par leur empreinte SHA-256, recalculée à
+chaque construction : une balise `<script>` injectée ne s'exécuterait pas.
+
+Si vous modifiez `index.html` à la main dans la partie script, l'empreinte ne correspondra
+plus et la page restera vide. Reconstruisez le fichier plutôt que de l'éditer.
+
+### Deux limites à connaître
+
+**Le stockage local appartient à l'origine, pas au dossier.** Sur
+`https://votre-compte.github.io/portefeuille-bricks/`, l'origine est
+`https://votre-compte.github.io` tout entière : **toutes vos autres GitHub Pages de projet
+partagent ce stockage** et pourraient lire le portefeuille. Si vous publiez d'autres pages
+sous ce compte, et surtout si vous y déployez du code que vous n'avez pas écrit, préférez
+un nom de domaine dédié, ou un compte GitHub distinct.
+
+**Le dépôt est public.** Le code ne contient aucun chiffre, mais `projets.json` contient
+les noms des projets souscrits, leur durée et leur taux annoncé. Montants, dates et
+identité n'y figurent pas, mais la composition du portefeuille, elle, devient publique et
+rattachable à votre compte GitHub. Si cela vous gêne, retirez `projets.json` du dépôt : les
+deux colonnes concernées afficheront *données manquantes*, le reste fonctionnera.
 
 ## Utilisation
 

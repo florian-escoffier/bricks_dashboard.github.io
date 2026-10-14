@@ -172,6 +172,10 @@
   .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .field i { font-style: normal; color: var(--muted); margin-left: -3px; }
 
+  .duo { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: 18px; align-items: center; }
+  @media (max-width: 48rem) { .duo { grid-template-columns: 1fr; } }
+  table.t td .sw { margin-right: 8px; vertical-align: baseline; }
+
   .total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .total-v { font-family: var(--disp); font-weight: 400; font-size: 1.5rem; line-height: 1.1;
              color: var(--figure); font-variant-numeric: tabular-nums; }
@@ -267,13 +271,12 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Le capital, mois par mois</h2>
-          <p>Ce que la plateforme n’affiche pas : la part du capital déjà revenue dans le wallet, et donc le montant réellement exposé.</p>
+          <p>Le capital réellement exposé, mois après mois : ce que vous avez placé, moins ce qui vous a déjà été remboursé. C’est le montant qui travaille, et celui que vous risquez.</p>
         </div>
         <div class="cards">
           <div class="card">
-            <div class="card-h"><h3>Capital placé, remboursé, investi</h3><span id="sub-capital">Cumuls depuis le premier investissement</span></div>
+            <div class="card-h"><h3>Capital investi</h3><span id="sub-capital">À la fin de chaque mois</span></div>
             <div class="chart" id="c-capital" style="min-height:240px"></div>
-            <div class="legend" id="l-capital"></div>
           </div>
           <div class="card">
             <div class="card-h"><h3>Revenus encaissés par mois</h3><span>Loyers, intérêts et primes encaissés, par provenance</span></div>
@@ -306,22 +309,20 @@
           <h2>Par type de contrat</h2>
           <p>Obligation, prêt et royalty ne se comportent pas pareil. Le rendement brut rapporte les revenus perçus au capital placé, sans tenir compte du temps : à durées différentes, deux lignes ne sont pas comparables sur ce chiffre.</p>
         </div>
-        <div class="cards">
-          <div class="card">
-            <div class="card-h"><h3>Répartition et rendement</h3><span>Mêmes colonnes que le portefeuille</span></div>
+        <div class="card">
+          <div class="card-h"><h3>Répartition et rendement</h3><span>Part du capital exposé, et ce que chaque famille a rapporté</span></div>
+          <div class="duo">
+            <div class="chart" id="c-contrats" style="min-height:200px"></div>
             <div class="twrap" data-h="auto">
               <table class="t" id="t-contrats">
                 <thead><tr>
-                  <th data-k="contrat">Contrat</th><th data-k="nb_projets">Projets</th><th data-k="investi">Placé</th>
-                  <th data-k="encours">Investi</th><th data-k="revenus">Revenus</th><th data-k="rendement_brut">Rdt brut</th>
+                  <th data-k="contrat">Contrat</th><th data-k="encours">Investi</th><th data-k="part">Part</th>
+                  <th data-k="nb_projets">Projets</th><th data-k="investi">Placé</th>
+                  <th data-k="revenus">Revenus</th><th data-k="rendement_brut">Rdt brut</th>
                 </tr></thead>
                 <tbody></tbody>
               </table>
             </div>
-          </div>
-          <div class="card">
-            <div class="card-h"><h3>Capital investi par contrat</h3><span>En euros</span></div>
-            <div class="chart" id="c-contrats" style="min-height:150px"></div>
           </div>
         </div>
       </section>
@@ -1028,7 +1029,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       $('note-retard').textContent = nr
         ? 'Les revenus non perçus sont une estimation au rythme habituel de chaque projet, pas un montant dû par Bricks.'
         : 'Aucun projet en retard : chaque projet non soldé a versé dans le délai attendu.';
-      $('sub-capital').textContent = 'Cumuls depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7));
+      $('sub-capital').textContent = 'À la fin de chaque mois, depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7));
       $('seg-ytd').textContent = (data.synthese.date_export || '').slice(0, 4) || 'Année';
       /* un champ number n'accepte que le point décimal */
       if (!$('p-taux').value) $('p-taux').value = String(Math.round((tauxSaisi === null ? reference().taux : tauxSaisi) * 100) / 100);
@@ -1116,7 +1117,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
             td.append(p);
           } else {
             const raw = r[c.k];
-            td.textContent = (raw === '' || raw === null || raw === undefined) ? '—' : (c.f ? c.f(raw) : String(raw));
+            if (c.swatch && couleurContrat[raw]) {
+              const sw = document.createElement('span');
+              sw.className = 'sw';
+              sw.style.background = couleurContrat[raw];
+              sw.style.display = 'inline-block';
+              td.append(sw);
+            }
+            const mot = document.createElement('span');
+            mot.textContent = (raw === '' || raw === null || raw === undefined) ? '—' : (c.f ? c.f(raw) : String(raw));
+            td.append(mot);
             if (c.neg && +raw < 0) td.classList.add('neg');
           }
           tr.append(td);
@@ -1203,13 +1213,15 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const el = $('c-capital');
     if (!el || !data) return;
     const card = el.closest('.card');
-    const rows = data.mensuel.map((r) => ({ d: new Date(r.mois + '-01T00:00:00Z'), a: +r.cumul_investi, b: +r.encours, c: +r.cumul_rembourse }));
+    const rows = data.mensuel.map((r) => ({
+      d: new Date(r.mois + '-01T00:00:00Z'), total: +r.encours || 0,
+      achats: +r.achats || 0, rembourse: +r.remboursements || 0
+    }));
     const W = Math.max(300, el.clientWidth || 600), H = Math.max(230, Math.min(330, W * 0.5));
     const svg = mkSvg(el, W, H);
     if (rows.length < 2) return;
-    const S = [{ k: 'a', t: 'Total placé', c: 'var(--s1)' }, { k: 'b', t: 'Investi', c: 'var(--s3)' }, { k: 'c', t: 'Remboursé', c: 'var(--s2)' }];
-    const maxY = d3.max(rows, (r) => r.a) || 1;
-    const m = { t: 10, r: Math.min(tw(svg, S.map((s) => s.t), 10.5) + 16, W * 0.3), b: 24, l: tw(svg, d3.ticks(0, maxY, 5).map(eur), 10.5) + 10 };
+    const maxY = d3.max(rows, (r) => r.total) || 1;
+    const m = { t: 10, r: 12, b: 24, l: tw(svg, d3.ticks(0, maxY, 5).map(eur), 10.5) + 10 };
     const x = d3.scaleUtc(d3.extent(rows, (r) => r.d), [m.l, W - m.r]);
     const y = d3.scaleLinear([0, maxY], [H - m.b, m.t]).nice();
     grid(svg, y, m.l, W - m.r);
@@ -1218,31 +1230,26 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     svg.append('g').attr('transform', `translate(${m.l},0)`)
       .call(d3.axisLeft(y).ticks(5).tickFormat(eur).tickSizeOuter(0)).call(axis);
     const g = svg.append('defs').append('linearGradient').attr('id', 'gcap').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 1);
-    [[0, .26], [.25, .16], [.5, .08], [.75, .03], [1, 0]].forEach(([o, op]) =>
-      g.append('stop').attr('offset', o).attr('stop-opacity', op).attr('style', 'stop-color: var(--s3)'));
+    [[0, .30], [.25, .18], [.5, .09], [.75, .03], [1, 0]].forEach(([o, op]) =>
+      g.append('stop').attr('offset', o).attr('stop-opacity', op).attr('style', 'stop-color: var(--s1)'));
     svg.append('path').datum(rows).attr('fill', 'url(#gcap)')
-      .attr('d', d3.area().x((r) => x(r.d)).y0(y(0)).y1((r) => y(r.b)));
-    S.forEach((s) => svg.append('path').datum(rows).attr('fill', 'none').style('stroke', s.c)
+      .attr('d', d3.area().x((r) => x(r.d)).y0(y(0)).y1((r) => y(r.total)));
+    svg.append('path').datum(rows).attr('fill', 'none').style('stroke', 'var(--s1)')
       .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
-      .attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r[s.k]))));
+      .attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r.total)));
     const last = rows[rows.length - 1];
-    const pos = S.map((s) => ({ s, yy: y(last[s.k]) })).sort((a, b) => a.yy - b.yy);
-    for (let i = 1; i < pos.length; i++) if (pos[i].yy - pos[i - 1].yy < 12) pos[i].yy = pos[i - 1].yy + 12;
-    pos.forEach((p) => {
-      svg.append('circle').attr('cx', x(last.d)).attr('cy', y(last[p.s.k])).attr('r', 3).style('fill', p.s.c);
-      svg.append('text').attr('x', x(last.d) + 7).attr('y', Math.min(H - m.b, Math.max(10, p.yy)) + 3.5)
-        .attr('font-size', 10.5).style('fill', p.s.c).text(p.s.t);
-    });
+    svg.append('circle').attr('cx', x(last.d)).attr('cy', y(last.total)).attr('r', 3.5).style('fill', 'var(--s1)');
     const tip = tipOf(card);
     svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', Math.max(1, W - m.l - m.r)).attr('height', Math.max(1, H - m.t - m.b))
       .attr('fill', 'transparent')
       .on('mousemove', (ev) => {
         const px = d3.pointer(ev, svg.node())[0];
         const r = rows[d3.leastIndex(rows, (q) => Math.abs(x(q.d) - px))];
-        tipShow(tip, card, ev, mLab(r.d), S.map((s) => ({ c: s.c, t: s.t + ' · ' + eur(r[s.k]) })));
+        tipShow(tip, card, ev, mLab(r.d), [{ c: 'var(--s1)', t: 'Capital investi · ' + eur(r.total) }]
+          .concat(r.achats > 0.005 ? [{ t: 'Placé ce mois-là · +' + eur2(r.achats) }] : [])
+          .concat(r.rembourse > 0.005 ? [{ t: 'Remboursé ce mois-là · −' + eur2(r.rembourse) }] : []));
       })
       .on('mouseleave', () => { tip.style.opacity = '0'; });
-    legend('l-capital', S.map((s) => ({ c: s.c, t: s.t })));
   }
 
   /* Provenance des revenus : une couleur par type de contrat */
@@ -1375,13 +1382,44 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   }
 
   function drawContrats() {
-    if (!data) return;
-    const SC = ['var(--s1)', 'var(--s3)', 'var(--s2)', 'var(--s4)'];
-    hbars('c-contrats', data.contrats.slice().sort((a, b) => b.encours - a.encours).map((r) => ({
-      nom: r.contrat, v: r.encours,
-      lines: [{ t: 'Investi · ' + eur(r.encours) }, { t: 'Placé · ' + eur(r.investi) },
-      { t: 'Projets · ' + num(r.nb_projets) }, { t: 'Rendement brut · ' + pct(r.rendement_brut) }]
-    })), { rowH: 30, barH: 26, cut: 18, fmt: eur, minH: 140, color: (i) => SC[i % SC.length] });
+    const el = $('c-contrats');
+    if (!el || !data) return;
+    const card = el.closest('.card');
+    const rows = data.contrats.map((r) => ({
+      nom: r.contrat, v: +r.encours || 0, inv: +r.investi || 0,
+      n: +r.nb_projets || 0, rdt: +r.rendement_brut || 0
+    })).filter((r) => r.v > 0.005).sort((a, b) => b.v - a.v);
+    const total = rows.reduce((a, r) => a + r.v, 0);
+
+    const W = Math.max(200, el.clientWidth || 300), H = Math.max(200, Math.min(260, W));
+    const svg = mkSvg(el, W, H);
+    if (!rows.length || total <= 0) return;
+
+    const rayon = Math.min(W, H) / 2 - 8;
+    const g = svg.append('g').attr('transform', `translate(${W / 2},${H / 2})`);
+    const parts = d3.pie().sort(null).value((d) => d.v)(rows);
+    const arc = d3.arc().innerRadius(0).outerRadius(rayon).padAngle(0.012).cornerRadius(2);
+    const tip = tipOf(card);
+    parts.forEach((p, i) => {
+      const couleur = couleurContrat[p.data.nom] || SERIES[i % SERIES.length], part = p.data.v / total;
+      g.append('path').attr('d', arc(p)).style('fill', couleur)
+        .style('stroke', 'var(--panel)').attr('stroke-width', 1.5)
+        .on('mousemove', (ev) => tipShow(tip, card, ev, p.data.nom, [
+          { c: couleur, t: 'Capital investi · ' + eur(p.data.v) },
+          { t: 'Part du portefeuille · ' + pct1(100 * part) },
+          { t: 'Total placé · ' + eur(p.data.inv) },
+          { t: 'Projets · ' + num(p.data.n) },
+          { t: 'Rendement brut · ' + pct(p.data.rdt) }
+        ]))
+        .on('mouseleave', () => { tip.style.opacity = '0'; });
+      /* la part n'est écrite dans la tranche que si elle y tient */
+      if (part >= 0.08) {
+        const c = arc.centroid(p);
+        g.append('text').attr('x', c[0]).attr('y', c[1] + 4).attr('text-anchor', 'middle')
+          .attr('font-size', 12.5).attr('font-weight', 500).style('fill', 'var(--bg)')
+          .text(Math.round(part * 100) + ' %');
+      }
+    });
   }
 
   function drawTop() {
@@ -1561,6 +1599,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       .on('mouseleave', () => { tip.style.opacity = '0'; });
   }
 
+  const SERIES = ['var(--s1)', 'var(--s3)', 'var(--s2)', 'var(--s4)'];
+  let couleurContrat = {};
+
   let redraw = () => {};
   function renderAll() {
     renderMeta();
@@ -1573,10 +1614,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     if (!data) return;
 
     const CL = (v) => B.LBL[v] || v || 'Non défini';
+
+    /* La couleur suit le contrat, pas la ligne : le tableau reste la légende du camembert
+       même après un tri par une autre colonne. */
+    couleurContrat = {};
+    data.contrats.slice().sort((a, b) => (+b.encours || 0) - (+a.encours || 0))
+      .forEach((c, i) => { couleurContrat[c.contrat] = SERIES[i % SERIES.length]; });
+    const totalEncours = data.contrats.reduce((a, c) => a + (+c.encours || 0), 0) || 1;
     table('t-contrats', [
-      { k: 'contrat' }, { k: 'nb_projets', num: true, f: num }, { k: 'investi', num: true, f: eur },
-      { k: 'encours', num: true, f: eur }, { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }
-    ], () => data.contrats, { sort: 'investi' });
+      { k: 'contrat', swatch: true }, { k: 'encours', num: true, f: eur }, { k: 'part', num: true, f: pct1 },
+      { k: 'nb_projets', num: true, f: num }, { k: 'investi', num: true, f: eur },
+      { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }
+    ], () => data.contrats.map((c) => Object.assign({}, c, { part: 100 * (+c.encours || 0) / totalEncours })),
+      { sort: 'encours' });
 
     const enRetard = () => data.projets.filter((p) => p.vigilance === 'Retard');
     const mois = (v) => n1.format(+v) + ' mois';

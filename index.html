@@ -320,8 +320,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M6 20V10m4 10V5m4 15v-8m4 8V8"/></svg>
       </div>
       <h2 id="vide-titre">Chargement de votre portefeuille</h2>
-      <p>Téléchargez l’historique de vos transactions depuis votre espace Bricks, puis déposez le fichier ici. Les formats <code>.xlsx</code> et <code>.csv</code> sont acceptés.</p>
-      <p>Le fichier est lu par votre navigateur et n’est envoyé nulle part. Les données restent sur cet appareil, dans ce navigateur.</p>
+      <p>Exportez l’historique de vos transactions depuis votre espace Bricks, puis déposez le fichier ici. Formats acceptés : <code>.xlsx</code> et <code>.csv</code>.</p>
+      <p>Le fichier est lu par votre navigateur et n’est transmis nulle part. Les données demeurent sur cet appareil, dans ce navigateur.</p>
       <button class="btn" data-v="primary" id="btn-import-2" type="button">Importer un export</button>
       <p id="vide-note"></p>
     </div>
@@ -347,8 +347,8 @@
     <div id="p-vue" role="tabpanel" aria-labelledby="tab-vue">
       <section class="sec">
         <div class="sec-h">
-          <h2>Le capital, mois par mois</h2>
-          <p>Le capital réellement exposé, mois après mois : ce que vous avez placé, moins ce qui vous a déjà été remboursé. C’est le montant qui travaille, et celui que vous risquez.</p>
+          <h2>Évolution du capital</h2>
+          <p>Capital placé diminué des remboursements reçus, à la fin de chaque mois : le montant réellement exposé.</p>
         </div>
         <div class="cards">
           <div class="card">
@@ -356,7 +356,7 @@
             <div class="chart" id="c-capital" style="min-height:240px"></div>
           </div>
           <div class="card">
-            <div class="card-h"><h3>Revenus encaissés par mois</h3><span>Loyers, intérêts et primes encaissés, par provenance</span></div>
+            <div class="card-h"><h3>Revenus encaissés</h3><span>Par mois et par origine des fonds</span></div>
             <div class="tools">
               <div class="seg" id="seg-periode" role="group" aria-label="Période affichée">
                 <button type="button" data-p="3" aria-pressed="false">3 mois</button>
@@ -383,11 +383,11 @@
 
       <section class="sec">
         <div class="sec-h">
-          <h2>Par type de contrat</h2>
-          <p>Obligation, prêt et royalty ne se comportent pas pareil. Le rendement brut rapporte les revenus perçus au capital placé, sans tenir compte du temps : à durées différentes, deux lignes ne sont pas comparables sur ce chiffre.</p>
+          <h2>Répartition par type de contrat</h2>
+          <p>Le rendement brut ne tient pas compte du temps : il ne permet pas de comparer deux contrats de durées différentes.</p>
         </div>
         <div class="card">
-          <div class="card-h"><h3>Répartition et rendement</h3><span>Part du capital exposé, et ce que chaque famille a rapporté</span></div>
+          <div class="card-h"><h3>Répartition et rendement</h3><span>Part du capital investi et revenus par type de contrat</span></div>
           <div class="duo">
             <div class="chart" id="c-contrats" style="min-height:200px"></div>
             <div class="twrap" data-h="auto">
@@ -407,7 +407,7 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Remboursements</h2>
-          <p>Les trois chiffres du haut disent ce qui est <b>déjà revenu</b> ; le tableau, ce qui <b>ne l’est pas encore</b> et quand les durées annoncées le promettent. Les horizons sont cumulatifs — « d’ici 12 mois » comprend les six premiers — et comprennent le capital dont l’échéance est passée sans qu’il soit rendu.</p>
+          <p>Les trois indicateurs portent sur le capital <b>déjà rendu</b>, le tableau sur celui qui <b>reste dû</b>. Les horizons sont cumulatifs : « d’ici 12 mois » comprend les six premiers, et chacun inclut le capital dont l’échéance est dépassée.</p>
         </div>
         <div class="card">
           <div class="ledger ledger-in">
@@ -430,11 +430,11 @@
 
       <section class="sec">
         <div class="sec-h">
-          <h2>Points de vigilance</h2>
-          <p>Projets non soldés dont le versement attendu n’est pas arrivé. Pour une obligation remboursable in fine, le silence est normal ; pour un projet qui versait chaque mois, il ne l’est pas.</p>
+          <h2>Retards de versement</h2>
+          <p>Projets non soldés dont le versement attendu n’est pas arrivé. L’absence de versement est normale sur une obligation remboursable in fine, anormale sur un projet à versements réguliers.</p>
         </div>
         <div class="card">
-          <div class="card-h"><h3>Les retards les plus anciens</h3><span id="sub-vigilance"></span></div>
+          <div class="card-h"><h3>Retards les plus anciens</h3><span id="sub-vigilance"></span></div>
           <div class="twrap" data-h="auto">
             <table class="t" id="t-vigilance">
               <thead><tr>
@@ -452,16 +452,16 @@
     <div id="p-projets" role="tabpanel" aria-labelledby="tab-projets" hidden>
       <section class="sec">
         <div class="sec-h">
-          <h2>Qui rapporte, qui dort</h2>
-          <p>Le TRI d’un projet tient compte de la date de chaque versement et valorise le capital non remboursé à son montant nominal.</p>
+          <h2>Performance des projets</h2>
+          <p>Revenus perçus et taux de rendement interne, projet par projet. Le détail du calcul figure dans l’onglet Méthode.</p>
         </div>
         <div class="cards">
           <div class="card">
-            <div class="card-h"><h3>12 projets les plus rémunérateurs</h3><span>Revenus perçus depuis l’entrée</span></div>
+            <div class="card-h"><h3>Projets les plus rémunérateurs</h3><span>Revenus perçus depuis la souscription</span></div>
             <div class="chart" id="c-top" style="min-height:320px"></div>
           </div>
           <div class="card">
-            <div class="card-h"><h3 id="h-tri">TRI selon la durée du projet</h3><span>Un point par projet ; la taille marque le capital placé</span></div>
+            <div class="card-h"><h3 id="h-tri">TRI selon la durée du projet</h3><span>Un point par projet, dimensionné au capital placé</span></div>
             <div class="tools">
               <label class="switch">
                 <span class="switch-l">Durée de détention</span>
@@ -477,7 +477,7 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Tous les projets</h2>
-          <p>Cliquez un en-tête pour trier, tapez pour filtrer. Durée et taux annoncé viennent de <code>projets.json</code> ; <span class="count" id="couverture"></span> Les revenus attendus et l’horizon en découlent : l’horizon compte les mois restants jusqu’à l’échéance, et devient négatif quand elle est dépassée.</p>
+          <p>Durée et taux annoncé proviennent de <code>projets.json</code> ; les revenus attendus et l’horizon en découlent. L’horizon compte les mois restants avant l’échéance et devient négatif une fois celle-ci dépassée. <span id="couverture"></span></p>
         </div>
         <div class="card">
           <div class="tools">
@@ -521,11 +521,11 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Projection des revenus</h2>
-          <p>Ce que votre portefeuille rapporterait si le rendement constaté ces douze derniers mois se maintenait. Ce n’est pas une prévision : l’export ne contient ni taux promis, ni échéance, ni durée de projet. Les primes de parrainage sont exclues, elles ne dépendent pas du capital placé.</p>
+          <p>Extrapolation du rendement net constaté sur votre portefeuille. Ce n’est pas une prévision : elle repose sur quatre hypothèses, détaillées en bas de page. Les primes de parrainage en sont exclues, elles ne dépendent pas du capital placé.</p>
         </div>
 
         <div class="card">
-          <div class="card-h"><h3>Hypothèses</h3><span>Modifiez-les pour tester un scénario</span></div>
+          <div class="card-h"><h3>Paramètres</h3><span>Modifiables pour tester un scénario</span></div>
           <div class="tools">
             <div class="seg" id="seg-horizon" role="group" aria-label="Horizon de projection">
               <button type="button" data-h="12" aria-pressed="true">1 an</button>
@@ -535,7 +535,7 @@
             </div>
           </div>
           <div class="tools">
-            <label class="field"><span>Rendement brut annuel</span><input type="number" id="p-taux" min="0" max="40" step="0.1"><i>%</i></label>
+            <label class="field"><span>Rendement net annuel</span><input type="number" id="p-taux" min="0" max="40" step="0.1"><i>%</i></label>
             <label class="field"><span>Apport mensuel</span><input type="number" id="p-apport" min="0" max="100000" step="10" value="0"><i>€</i></label>
             <label class="switch">
               <span class="switch-l">Réinvestir les revenus</span>
@@ -551,12 +551,12 @@
           <div class="cell"><div class="cell-l">Revenus nets projetés</div><div class="cell-v" id="pj-total">—</div><div class="cell-n" id="pj-total-n">sur l’horizon retenu</div></div>
           <div class="cell"><div class="cell-l">Revenu net mensuel moyen</div><div class="cell-v" id="pj-moyen">—</div><div class="cell-n" id="pj-moyen-n">contre <b id="pj-actuel">—</b> aujourd’hui</div></div>
           <div class="cell"><div class="cell-l">Capital investi à terme</div><div class="cell-v" id="pj-capital">—</div><div class="cell-n" id="pj-capital-n">—</div></div>
-          <div class="cell"><div class="cell-l">Rendement net retenu</div><div class="cell-v" id="pj-net">—</div><div class="cell-n">après prélèvement de <b id="pj-impot">—</b></div></div>
+          <div class="cell"><div class="cell-l">Rendement net retenu</div><div class="cell-v" id="pj-net">—</div><div class="cell-n">soit <b id="pj-brut">—</b> brut, au taux de prélèvement observé</div></div>
         </div>
 
         <div class="cards" style="margin-top: 16px">
           <div class="card">
-            <div class="card-h"><h3>Revenus nets cumulés</h3><span id="pj-sub">Mois après mois, à partir de la fin de l’export</span></div>
+            <div class="card-h"><h3>Revenus nets cumulés</h3><span id="pj-sub">Mois par mois, à partir de la date de l’export</span></div>
             <div class="chart" id="c-projection" style="min-height: 240px"></div>
           </div>
           <div class="card">
@@ -564,7 +564,7 @@
             <div class="twrap" data-h="auto">
               <table class="t" id="t-projection">
                 <thead><tr>
-                  <th>Année</th><th>Mois</th><th>Revenus nets</th><th>Cumul</th><th>Capital fin d’année</th>
+                  <th>Année</th><th>Investi dans l’année</th><th>Capital cumulé</th><th>Revenu net / mois</th>
                 </tr></thead>
                 <tbody></tbody>
               </table>
@@ -573,18 +573,18 @@
         </div>
 
         <div class="card" style="margin-top: 16px">
-          <div class="card-h"><h3>Ce que ce calcul suppose</h3><span>À lire avant de s’appuyer dessus</span></div>
-          <dl class="note"><dt>Le rendement se maintient</dt><dd>Le taux proposé par défaut est celui que votre portefeuille a réellement servi sur les douze derniers mois : revenus bruts rapportés au capital moyen investi sur la période. Rien ne garantit qu’il se maintienne.</dd></dl>
-          <dl class="note"><dt>Le capital reste placé</dt><dd>Les remboursements de capital sont supposés réinvestis au même rendement. Sans échéances dans l’export, la projection ne peut pas modéliser l’extinction progressive des projets.</dd></dl>
+          <div class="card-h"><h3>Hypothèses du calcul</h3><span>À lire avant de s’appuyer sur ces chiffres</span></div>
+          <dl class="note"><dt>Le rendement se maintient</dt><dd>Le taux proposé par défaut est le TRI net annualisé de votre portefeuille, soit le rendement que vos flux réels ont effectivement produit depuis l’origine, après prélèvement. Rien ne garantit qu’il se maintienne.</dd></dl>
+          <dl class="note"><dt>Le capital reste placé</dt><dd>Les remboursements de capital sont supposés réinvestis au même rendement. La projection ne modélise pas l’extinction des projets à leur échéance.</dd></dl>
           <dl class="note"><dt>Aucun défaut</dt><dd>Le calcul suppose que tous les projets paient. <b id="pj-risque">—</b></dd></dl>
-          <dl class="note"><dt>Fiscalité constante</dt><dd>Le prélèvement à la source est appliqué au taux moyen observé sur les douze derniers mois, supposé stable.</dd></dl>
+          <dl class="note"><dt>Fiscalité constante</dt><dd>Le taux saisi étant net, aucune retenue n’est appliquée au-dessus. L’équivalent brut affiché en regard est reconstitué au taux de prélèvement observé sur les douze derniers mois, supposé stable.</dd></dl>
         </div>
       </section>
     </div>
 
     <div id="p-ops" role="tabpanel" aria-labelledby="tab-ops" hidden>
       <section class="sec">
-        <div class="sec-h"><h2>Toutes les opérations du wallet</h2><p>L’export complet, filtrable : pour retrouver un versement précis ou vérifier un chiffre.</p></div>
+        <div class="sec-h"><h2>Opérations du wallet</h2><p>L’intégralité de l’export, filtrable, pour retrouver un versement ou vérifier un chiffre.</p></div>
         <div class="card">
           <div class="tools">
             <input id="q-ops" type="search" placeholder="Filtrer par projet, type, date…" aria-label="Filtrer les opérations">
@@ -601,7 +601,7 @@
           </div>
         </div>
         <div class="card" style="margin-top:16px">
-          <div class="card-h"><h3>Le wallet</h3><span>Trésorerie, hors investissements</span></div>
+          <div class="card-h"><h3>Trésorerie</h3><span>Mouvements du wallet, hors investissements</span></div>
           <div class="twrap" data-h="auto">
             <table class="t">
               <tbody>
@@ -619,23 +619,24 @@
 
     <div id="p-methode" role="tabpanel" aria-labelledby="tab-methode" hidden>
       <section class="sec">
-        <div class="sec-h"><h2>Comment chaque chiffre est calculé</h2><p>Tout vient de l’export des transactions du wallet. Les opérations refusées et annulées sont écartées.</p></div>
+        <div class="sec-h"><h2>Méthode de calcul</h2><p>Tous les chiffres sont établis à partir du seul export des transactions du wallet. Les opérations refusées et annulées sont écartées.</p></div>
         <div class="card">
           <dl class="note"><dt>Capital placé</dt><dd>Somme des achats de bricks et des achats sur la marketplace.</dd></dl>
           <dl class="note"><dt>Capital investi</dt><dd>Capital placé moins les remboursements de capital reçus : le montant réellement exposé aujourd’hui.</dd></dl>
           <dl class="note"><dt>Revenus</dt><dd>Lignes « Revenus reversés » : loyers et intérêts, avant impôt. Les remboursements de capital n’y sont pas comptés.</dd></dl>
-          <dl class="note"><dt>Primes et bonus</dt><dd>Primes de parrainage, solde boosté et gestes commerciaux. Ils comptent dans les revenus encaissés et dans le total de la période, mais pas dans le rendement ni le TRI d’un projet : ils ne sont pas produits par le capital placé. Le prélèvement observé ne portant que sur les revenus des projets, ils sont affichés sans retenue.</dd></dl>
+          <dl class="note"><dt>Primes et bonus</dt><dd>Primes de parrainage, solde boosté et gestes commerciaux. Ils entrent dans les revenus encaissés et dans le total de la période, mais ni dans le rendement ni dans le TRI d’un projet, n’étant pas produits par le capital placé. Le prélèvement ne portant que sur les revenus des projets, ils sont affichés sans retenue.</dd></dl>
           <dl class="note"><dt>Revenus nets</dt><dd>Revenus moins le prélèvement à la source. Le prélèvement n’étant pas rattaché à un projet dans l’export, il reste global.</dd></dl>
           <dl class="note"><dt>Revenus par type de contrat</dt><dd>Chaque versement est rattaché au contrat du projet qui l’a produit. En vue nette, le prélèvement du mois est réparti entre les contrats au prorata des revenus de ce mois : le total affiché est exact, la répartition entre contrats est une approximation.</dd></dl>
-          <dl class="note"><dt>TRI</dt><dd>Taux de rendement interne annualisé (méthode XIRR) sur les flux réels aux dates réelles, avec le capital non remboursé valorisé à son montant nominal à la date de l’export. C’est une hypothèse : un projet en défaut paraîtra meilleur qu’il ne l’est jusqu’à ce que la perte se matérialise.</dd></dl>
+          <dl class="note"><dt>TRI</dt><dd>Taux de rendement interne annualisé (méthode XIRR), calculé sur les flux réels à leurs dates réelles, le capital non remboursé étant valorisé à son montant nominal à la date de l’export. Cette valorisation est une hypothèse : un projet en défaut paraîtra meilleur qu’il ne l’est tant que la perte n’est pas constatée.</dd></dl>
           <dl class="note"><dt>Rendement brut</dt><dd>Revenus perçus divisés par le capital placé, sans annualisation.</dd></dl>
-          <dl class="note"><dt>Projets comptés</dt><dd>Une prime de parrainage porte dans l’export le nom du projet souscrit par le filleul. Les projets qui n’apparaissent qu’à ce titre, sans aucun achat ni revenu de votre part, sont écartés du décompte et des tableaux.</dd></dl>
+          <dl class="note"><dt>Projets comptés</dt><dd>Dans l’export, une prime de parrainage porte le nom du projet souscrit par le filleul. Les projets qui n’apparaissent qu’à ce titre, sans achat ni revenu de votre part, sont écartés du décompte et des tableaux.</dd></dl>
           <dl class="note"><dt>Projet soldé</dt><dd>Capital remboursé au moins égal au capital placé, à 0,50 € près.</dd></dl>
-          <dl class="note"><dt>Versement en retard</dt><dd>Projet non soldé dont le prochain versement aurait dû arriver. Le délai attendu est l’écart médian entre ses versements passés, plus une tolérance d’un demi-cycle (au moins 15 jours). Un projet qui n’a versé qu’une fois est jugé sur un forfait de 120 jours ; un projet qui n’a jamais rien versé l’est passé 90 jours de détention.</dd></dl>
-          <dl class="note"><dt>Revenus non perçus</dt><dd>Estimation, et non un montant dû : nombre de versements manqués multiplié par la moyenne des trois derniers versements du projet. Non calculable pour un projet qui n’a jamais versé, ou qui n’a versé qu’une fois.</dd></dl>
-          <dl class="note"><dt>Confidentialité</dt><dd>Le fichier que vous déposez est lu par votre navigateur, sur votre appareil. Il n’est transmis à aucun serveur : le site qui héberge cette page ne reçoit que la demande de la page elle-même, jamais vos données. Celles-ci sont conservées dans le stockage local du navigateur et ne quittent pas cet appareil ; elles ne sont donc pas partagées entre vos appareils, et le bouton Réinitialiser les efface définitivement. Vider les données de navigation du site les supprime également ; il suffit alors de réimporter votre export.</dd></dl>
-          <dl class="note"><dt>Projection</dt><dd>Elle applique le rendement des douze derniers mois au capital investi, mois après mois, et prélève l’impôt au taux moyen observé. L’onglet Projection détaille les quatre hypothèses qu’elle suppose ; aucune ne vient de Bricks.</dd></dl>
-          <dl class="note"><dt>Ce que l’export ne contient pas</dt><dd>Taux affiché à la souscription, échéance prévue, durée du projet, valorisation de marché et statut communiqué par Bricks. La durée et le taux annoncé viennent donc d’un fichier <code>projets.json</code> tenu à part, et non de l’export : les colonnes <em>Durée</em> et <em>Taux annoncé</em> affichent <em>données manquantes</em> pour tout projet qui n’y figure pas, plutôt qu’un zéro qui se confondrait avec une vraie valeur. Deux colonnes en découlent, et affichent un tiret quand elles ne peuvent pas être calculées. Les <em>revenus attendus</em> valent capital placé × taux annoncé × durée : c’est le montant promis sur toute la vie du projet, à comparer à la colonne <em>Revenus</em> qui donne l’encaissé réel — un écart y est normal tant que le projet court. L’<em>horizon</em> compte les mois restants jusqu’à l’échéance, prise comme la date du premier achat plus la durée annoncée ; il devient négatif lorsque cette échéance est passée sans que le capital soit revenu, et reste vide sur un projet soldé. Faute d’échéance communiquée par Bricks, cette date est déduite, pas officielle. Le reste du tableau, lui, ne dépend pas de ce fichier.</dd></dl>
+          <dl class="note"><dt>Versement en retard</dt><dd>Projet non soldé dont le prochain versement aurait dû arriver. Le délai attendu est l’écart médian entre ses versements passés, augmenté d’une tolérance d’un demi-cycle, au minimum 15 jours. Un projet n’ayant versé qu’une fois est jugé sur un forfait de 120 jours ; un projet n’ayant jamais versé l’est au-delà de 90 jours de détention.</dd></dl>
+          <dl class="note"><dt>Revenus non perçus</dt><dd>Estimation, et non un montant dû : nombre de versements manqués multiplié par la moyenne des trois derniers versements du projet. Non calculable pour un projet n’ayant jamais versé ou n’ayant versé qu’une fois.</dd></dl>
+          <dl class="note"><dt>Confidentialité</dt><dd>Le fichier déposé est lu par votre navigateur, sur votre appareil. Il n’est transmis à aucun serveur : le site hébergeant cette page ne reçoit que la demande de la page elle-même, jamais vos données. Celles-ci sont conservées dans l’espace de stockage local du navigateur et ne quittent pas l’appareil. Elles ne sont donc pas partagées entre vos appareils, et le bouton Réinitialiser les efface définitivement. Vider les données de navigation du site les supprime également ; il suffit alors de réimporter votre export.</dd></dl>
+          <dl class="note"><dt>Projection</dt><dd>Un rendement net annuel est appliqué au capital investi, mois par mois. Il vaut par défaut le TRI net annualisé du portefeuille et reste modifiable. L’onglet Projection en détaille les quatre hypothèses ; aucune ne provient de Bricks.</dd></dl>
+          <dl class="note"><dt>Ce que l’export ne contient pas</dt><dd>Taux affiché à la souscription, échéance prévue, durée du projet, valorisation de marché et statut communiqué par Bricks. Ces informations ne figurent nulle part dans les transactions du wallet.</dd></dl>
+          <dl class="note"><dt>Durées et taux annoncés</dt><dd>Ils proviennent d’un fichier <code>projets.json</code> tenu à part, et non de l’export. Les colonnes <em>Durée</em> et <em>Taux annoncé</em> affichent <em>données manquantes</em> pour un projet absent de ce fichier, plutôt qu’un zéro qui se confondrait avec une valeur réelle. Deux colonnes en sont déduites et affichent un tiret lorsqu’elles ne peuvent être calculées. Les <em>revenus attendus</em> valent capital placé × taux annoncé × durée : c’est le montant promis sur toute la vie du projet, à comparer à la colonne <em>Revenus</em>, qui donne l’encaissé réel ; un écart est normal tant que le projet court. L’<em>horizon</em> compte les mois restants avant l’échéance, prise comme la date du premier achat augmentée de la durée annoncée. Il devient négatif une fois cette échéance passée sans retour du capital, et reste vide sur un projet soldé. Bricks ne communiquant pas d’échéance, cette date est déduite et n’a aucun caractère officiel. Le reste du tableau ne dépend pas de ce fichier.</dd></dl>
         </div>
       </section>
     </div>
@@ -1080,7 +1081,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     el.replaceChildren();
     if (!data) {
       const s = document.createElement('span');
-      if (dbPret) s.textContent = 'En attente d’un premier import';
+      if (dbPret) s.textContent = 'Aucun export importé';
       else { s.className = 'skel'; s.textContent = ' '; }
       el.append(s);
       return;
@@ -1117,16 +1118,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       const nr = +data.synthese.nb_retard || 0;
       $('sub-vigilance').textContent = nr
         ? num(nr) + (nr > 1 ? ' projets concernés, ' : ' projet concerné, ') + eur(data.synthese.encours_retard) + ' de capital'
-        : 'Aucun projet en retard de versement';
+        : 'Aucun retard de versement';
       $('note-vigilance').textContent = nr > 5 ? 'Les ' + num(nr) + ' projets sont détaillés dans l’onglet Projets.' : '';
       $('sub-capital').textContent = 'À la fin de chaque mois, depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7));
       $('seg-ytd').textContent = (data.synthese.date_export || '').slice(0, 4) || 'Année';
       /* un champ number n'accepte que le point décimal */
-      if (!$('p-taux').value) $('p-taux').value = String(Math.round((tauxSaisi === null ? reference().taux : tauxSaisi) * 100) / 100);
+      if (!$('p-taux').value) $('p-taux').value = String(Math.round((tauxSaisi === null ? reference().tauxNet : tauxSaisi) * 100) / 100);
       $('foot').textContent = 'Calculé à partir de ' + num(data.synthese.nb_transactions)
         + ' opérations validées de l’export Bricks' + (data.meta.fichier ? ' (' + data.meta.fichier + ')' : '')
         + '. Ancienneté du portefeuille : ' + num(data.synthese.anciennete_mois) + ' mois.'
-        + ' Données conservées dans ce navigateur uniquement.';
+        + ' Données conservées dans ce navigateur uniquement.'
+        + ' Outil indépendant, sans lien avec Bricks.';
     }
   }
 
@@ -1746,7 +1748,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
      Le capital attendu est l'encours d'un projet, c'est-à-dire ce qu'il reste à
      rendre, rangé par échéance déduite. Un projet sans durée connue n'a pas
      d'échéance : il est compté à part plutôt que rangé arbitrairement. */
-  const HORIZONS = [6, 12, 24];
+  const HORIZONS = [3, 6, 12, 24];
 
   function majRemboursements() {
     if (!data || !$('t-echeances')) return;
@@ -1858,26 +1860,35 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const encours = m.reduce((a, r) => a + (+r.encours || 0), 0) / m.length;
     return {
       taux: encours > 0 ? (revenus / m.length * 12) / encours * 100 : 0,
+      /* Le taux proposé par défaut est celui qui résume tout le portefeuille :
+         son TRI net annualisé, le même chiffre que la bande du haut. */
+      tauxNet: +data.synthese.tri_net || 0,
       impot: revenus > 0 ? impots / revenus : 0,
       mois: m.length, revenus: revenus, encours: encours,
       mensuelRecent: m.slice(-3).reduce((a, r) => a + (+r.revenus_nets || 0), 0) / Math.min(3, m.length)
     };
   }
 
+  /* Le taux saisi est net d'impôt : il s'applique directement au capital, sans
+     retenue supplémentaire. Le brut n'est plus affiché que pour mémoire, reconstitué
+     au taux de prélèvement observé sur les douze derniers mois. */
   function projeter() {
     const ref = reference();
-    const tauxAn = tauxSaisi === null ? ref.taux : tauxSaisi;
+    const tauxAn = tauxSaisi === null ? ref.tauxNet : tauxSaisi;
     const tauxMois = tauxAn / 100 / 12;
     const depart = new Date(data.synthese.date_export + 'T00:00:00Z');
     let capital = +data.synthese.encours || 0, cumul = 0;
     const pts = [];
     for (let i = 1; i <= horizon; i++) {
-      const brut = capital * tauxMois;
-      const net = brut * (1 - ref.impot);
+      const net = capital * tauxMois;
       cumul += net;
+      /* Ce qui vient grossir le capital pendant le mois : l'apport, et les
+         revenus s'ils sont réinvestis. */
+      const ajout = apport + (reinvest ? net : 0);
       const d = new Date(Date.UTC(depart.getUTCFullYear(), depart.getUTCMonth() + i, 1));
-      pts.push({ d: d, mois: i, net: net, brut: brut, cumul: cumul, capital: capital });
-      capital += apport + (reinvest ? net : 0);
+      pts.push({ d: d, mois: i, net: net, cumul: cumul,
+        capital: capital, ajout: ajout, capitalFin: capital + ajout });
+      capital += ajout;
     }
     return { ref: ref, tauxAn: tauxAn, pts: pts, cumul: cumul, capitalFinal: capital };
   }
@@ -1895,29 +1906,33 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     $('pj-capital-n').textContent = reinvest
       ? 'revenus réinvestis' + (apport > 0 ? ' et ' + eur(apport) + ' par mois' : '')
       : (apport > 0 ? eur(apport) + ' d’apport par mois, revenus non réinvestis' : 'revenus non réinvestis');
-    $('pj-net').textContent = pct(p.tauxAn * (1 - ref.impot));
-    $('pj-impot').textContent = pct1(ref.impot * 100);
-    $('proj-base').textContent = 'Référence : ' + eur2(ref.revenus) + ' de revenus bruts sur '
-      + num(ref.mois) + ' mois, pour un capital moyen investi de ' + eur(ref.encours)
+    $('pj-net').textContent = pct(p.tauxAn);
+    $('pj-brut').textContent = pct(ref.impot < 1 ? p.tauxAn / (1 - ref.impot) : p.tauxAn);
+    $('proj-base').textContent = 'Référence : TRI net annualisé du portefeuille, ' + pct(ref.tauxNet)
+      + '. Sur les douze derniers mois, le portefeuille a servi ' + eur2(ref.revenus)
+      + ' de revenus bruts pour un capital moyen investi de ' + eur(ref.encours)
       + ', soit ' + pct(ref.taux) + ' brut par an.';
     $('pj-risque').textContent = (+data.synthese.nb_retard || 0) > 0
       ? num(data.synthese.nb_retard) + ' de vos projets ne versent plus, pour '
-        + eur(data.synthese.encours_retard) + ' de capital : ce capital est pourtant compté comme productif ici.'
+        + eur(data.synthese.encours_retard) + ' de capital, que ce calcul compte pourtant comme productif.'
       : 'Aucun de vos projets n’est en retard de versement à ce jour.';
 
     /* tableau année par année */
     const parAn = {};
     p.pts.forEach((r) => {
       const an = r.d.getUTCFullYear();
-      if (!parAn[an]) parAn[an] = { an: an, mois: 0, net: 0, cumul: 0, capital: 0 };
-      parAn[an].mois++; parAn[an].net += r.net; parAn[an].cumul = r.cumul; parAn[an].capital = r.capital;
+      if (!parAn[an]) parAn[an] = { an: an, mois: 0, net: 0, ajout: 0, capital: 0 };
+      parAn[an].mois++;
+      parAn[an].net += r.net;
+      parAn[an].ajout += r.ajout;        // capital venu s'ajouter pendant l'année
+      parAn[an].capital = r.capitalFin;  // capital atteint à la fin de l'année
     });
     const tbody = $('t-projection').querySelector('tbody');
     const frag = document.createDocumentFragment();
     Object.keys(parAn).sort().forEach((k) => {
       const r = parAn[k];
       const tr = document.createElement('tr');
-      [String(r.an), num(r.mois), eur2(r.net), eur2(r.cumul), eur(r.capital)].forEach((v, i) => {
+      [String(r.an), eur2(r.ajout), eur(r.capital), eur2(r.mois ? r.net / r.mois : 0)].forEach((v, i) => {
         const td = document.createElement('td');
         if (i) td.className = 'cnum';
         td.textContent = v;
@@ -2131,9 +2146,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   function blocPied() {
     const p = document.createElement('p');
     p.className = 'pied';
-    p.textContent = 'Durée et taux annoncé proviennent de projets.json et non de l’export Bricks ; '
-      + 'les revenus attendus et l’horizon en découlent. L’horizon devient négatif passé l’échéance, '
-      + 'et reste vide sur un projet soldé. Document produit le ' + dmy(new Date().toISOString()) + '.';
+    p.textContent = 'Durée et taux annoncé proviennent du fichier projets.json et non de l’export Bricks ; '
+      + 'les revenus attendus et l’horizon en découlent. L’horizon devient négatif passé l’échéance '
+      + 'et reste vide sur un projet soldé. Document produit le ' + dmy(new Date().toISOString())
+      + ' par un outil indépendant, sans lien avec Bricks.';
     return p;
   }
 
@@ -2343,7 +2359,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   $('p-reset').addEventListener('click', () => {
     tauxSaisi = null; apport = 0;
     memoriser('bk-taux', ''); memoriser('bk-apport', '0');
-    if (data) { $('p-taux').value = String(Math.round(reference().taux * 100) / 100); $('p-apport').value = '0'; }
+    if (data) { $('p-taux').value = String(Math.round(reference().tauxNet * 100) / 100); $('p-apport').value = '0'; }
     rejouer();
   });
 
@@ -2414,7 +2430,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       const raw = XLSX.utils.sheet_to_json(ws, { raw: true, defval: null });
       const nr = B.normalizeRows(raw);
       if (nr.erreur) { flash('err', nr.erreur); return; }
-      if (!nr.rows.length) { flash('err', 'Aucune opération validée trouvée dans ce fichier.'); return; }
+      if (!nr.rows.length) { flash('err', 'Aucune opération validée dans ce fichier.'); return; }
       const res = B.analyser(nr.rows, {
         fichier: f.name, importeLe: new Date().toISOString(), ignorees: nr.ignorees, inconnus: nr.inconnus
       });
@@ -2428,7 +2444,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
         strong(dmy(res.synthese.date_export)), '.'];
       if (inc.length) parts.push(' Types d’opération non reconnus et ignorés : ' + inc.join(', ') + '.');
       if (etat === 'quota') parts.push(' Le détail des opérations n’a pas pu être enregistré, faute de place dans le navigateur : les totaux et les projets le sont, l’onglet Opérations sera vide au prochain chargement.');
-      else if (etat === 'sans-stockage') parts.push(' Ces chiffres ne sont pas enregistrés et disparaîtront au rechargement : votre navigateur refuse le stockage local.');
+      else if (etat === 'sans-stockage') parts.push(' Ces chiffres ne sont pas enregistrés et disparaîtront au rechargement : votre navigateur refuse l’enregistrement local.');
       else if (etat !== 'ok') parts.push(' L’enregistrement a échoué (' + etat.split(':')[1] + ') : les chiffres s’affichent mais ne sont pas conservés.');
       flash(etat === 'ok' ? 'ok' : 'err', parts, [{ label: 'Fermer', onClick: flashOff }]);
     } catch (e) {
@@ -2449,7 +2465,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
               try { localStorage.removeItem(CLE); localStorage.removeItem(CLE_TX); } catch (e) {}
               data = null; txRows = [];
               renderAll();
-              flash('ok', 'Données supprimées. Importez un export pour repartir.', [{ label: 'Fermer', onClick: flashOff }]);
+              flash('ok', 'Données supprimées. Importez un export pour recommencer.', [{ label: 'Fermer', onClick: flashOff }]);
             } catch (e) {
               flash('err', 'Suppression impossible : ' + (e && e.message ? e.message : 'erreur inconnue'));
             }

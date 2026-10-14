@@ -110,7 +110,10 @@
   .card-h { display: flex; flex-direction: column; gap: 2px; }
   .card-h h3 { font-size: .95rem; }
   .card-h span { font-size: .78rem; color: var(--muted); }
-  .chart { width: 100%; min-width: 0; }
+  /* « pan-y » laisse le défilement vertical de la page au navigateur et nous
+     réserve les gestes horizontaux : le doigt peut parcourir le graphique sans
+     que la page soit bloquée. */
+  .chart { width: 100%; min-width: 0; touch-action: pan-y; }
   .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .76rem; color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -330,6 +333,7 @@
       <div class="cell"><div class="cell-l">Revenus nets encaissés</div><div class="cell-v" data-f="encaisse_net">—</div><div class="cell-n">après <b data-f="prelevement_source">—</b> d’impôt · dont <b data-f="bonus">—</b> de primes</div></div>
       <div class="cell"><div class="cell-l">TRI net annualisé</div><div class="cell-v" data-f="tri_net">—</div><div class="cell-n"><b data-f="tri_brut">—</b> avant impôt</div></div>
       <div class="cell"><div class="cell-l">Projets en cours</div><div class="cell-v" data-f="nb_actifs">—</div><div class="cell-n"><b data-f="nb_rembourses">—</b> projets soldés</div></div>
+      <div class="cell"><div class="cell-l">Solde disponible</div><div class="cell-v" data-f="solde_wallet">—</div><div class="cell-n">sur le wallet, non placé</div></div>
     </div>
 
     <nav class="tabs" role="tablist" aria-label="Vues du portefeuille">
@@ -1081,18 +1085,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       el.append(s);
       return;
     }
-    const m = data.meta, s = data.synthese;
+    const s = data.synthese;
     const bits = [];
     bits.push(['Export du ', s.date_export]);
     bits.push(['', num(s.nb_transactions) + ' opérations']);
     bits.push(['', num(s.nb_projets) + ' projets']);
-    bits.push(['Importé le ', (m.importeLe || '').slice(0, 10)]);
     const jours = Math.round((Date.now() - new Date(s.date_export + 'T00:00:00Z')) / 86400000);
     bits.forEach((b, i) => {
       if (i) { const d = document.createElement('i'); d.className = 'dot'; el.append(d); }
       const sp = document.createElement('span');
       if (b[0] === 'Export du ') { sp.append(document.createTextNode('Export du '), strong(dmy(b[1]))); }
-      else if (b[0] === 'Importé le ') { sp.append(document.createTextNode('importé le '), strong(dmy(b[1]))); }
       else sp.textContent = b[1];
       el.append(sp);
     });
@@ -1254,8 +1256,78 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   }
 
   /* ---------- outils graphiques ---------- */
+  /* Un doigt ne produit pas de « mousemove » : en glissant sur l'écran, il ne
+     survolerait aucune forme et aucune infobulle ne suivrait. On suit donc le
+     pointeur et on rejoue, sur la forme réellement située sous lui, le
+     gestionnaire que le graphique a déjà posé. Rien n'est dupliqué : chaque
+     graphique garde son propre contenu d'infobulle. */
+  const gestionnaire = (el) => el && (d3.select(el).on('mousemove') || d3.select(el).on('mouseover'));
+
+  /* La forme sous le doigt, ou le premier parent qui porte le gestionnaire. */
+  function porteur(el, zone) {
+    for (let n = el; n && n.nodeType === 1 && zone.contains(n); n = n.parentNode) {
+      if (gestionnaire(n)) return n;
+    }
+    return null;
+  }
+
+  function suivreAuDoigt(zone) {
+    if (!zone || zone.dataset.doigt) return;
+    zone.dataset.doigt = '1';
+    let formes = [];
+
+    /* Un doigt est large, une barre est fine, et les étiquettes couvrent une
+       partie du dessin : à défaut de toucher une forme, on prend la plus proche
+       dans un rayon d'un doigt, plutôt que de ne rien montrer. */
+    const laPlusProche = (x, y) => {
+      let choisie = null, dmin = Infinity;
+      for (let i = 0; i < formes.length; i++) {
+        const b = formes[i].getBoundingClientRect();
+        const dx = Math.max(b.left - x, 0, x - b.right);
+        const dy = Math.max(b.top - y, 0, y - b.bottom);
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < dmin) { dmin = d; choisie = formes[i]; }
+      }
+      return dmin <= 44 ? choisie : null;
+    };
+
+    const rejouer = (ev) => {
+      const sous = document.elementFromPoint(ev.clientX, ev.clientY);
+      const cible = (sous && zone.contains(sous) && porteur(sous, zone))
+        || laPlusProche(ev.clientX, ev.clientY);
+      if (!cible) { cacherTips(); return; }
+      const sel = d3.select(cible);
+      const fn = gestionnaire(cible);
+      if (fn) fn.call(cible, ev, sel.datum());
+    };
+
+    zone.addEventListener('pointerdown', (ev) => {
+      if (ev.pointerType === 'mouse') return;
+      /* La liste des formes est figée le temps du geste : le dessin ne change
+         pas pendant qu'on le parcourt, et on évite de la reconstruire à chaque
+         déplacement du doigt. */
+      formes = Array.prototype.filter.call(
+        zone.querySelectorAll('rect, circle, path'), (n) => gestionnaire(n));
+      /* La capture garde les mouvements même si le doigt sort du cadre ;
+         le test de position, lui, continue de dire ce qu'il y a dessous. */
+      try { zone.setPointerCapture(ev.pointerId); } catch (e) {}
+      rejouer(ev);
+    });
+    zone.addEventListener('pointermove', (ev) => {
+      if (ev.pointerType === 'mouse') return;
+      rejouer(ev);
+    });
+    /* Le doigt relevé laisse l'infobulle en place — elle serait illisible sous
+       le doigt — et c'est une touche ailleurs qui la referme. Un geste repris
+       par le navigateur pour faire défiler la page, lui, la fait disparaître. */
+    zone.addEventListener('pointercancel', (ev) => {
+      if (ev.pointerType !== 'mouse') cacherTips();
+    });
+  }
+
   function mkSvg(el, w, h) {
     el.replaceChildren();
+    suivreAuDoigt(el);
     return d3.select(el).append('svg').attr('viewBox', `0 0 ${w} ${h}`).attr('width', '100%').attr('role', 'img');
   }
   function tw(svg, arr, size) {

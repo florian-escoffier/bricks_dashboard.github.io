@@ -117,7 +117,10 @@
   .twrap[data-h="auto"] { max-height: none; }
   table.t { width: 100%; border-collapse: collapse; font-size: .82rem; }
   table.t th, table.t td { text-align: right; padding: 7px 10px; white-space: nowrap; border-bottom: 1px solid var(--line); }
-  table.t th:first-child, table.t td:first-child { text-align: left; white-space: normal; min-width: 11rem; padding-left: 0; }
+  table.t th:first-child, table.t td:first-child { text-align: left; padding-left: 0; }
+  /* La colonne qui porte un nom se cale à gauche et s'autorise à revenir à la
+     ligne, où qu'elle se trouve dans le tableau. */
+  table.t th.nom, table.t td.nom { text-align: left; white-space: normal; min-width: 11rem; }
   table.t th:last-child, table.t td:last-child { padding-right: 0; }
   table.t thead th { position: sticky; top: 0; background: var(--panel); color: var(--muted); font-weight: 500;
                      font-size: .74rem; letter-spacing: .03em; text-transform: uppercase; z-index: 1; }
@@ -374,7 +377,7 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Tous les projets</h2>
-          <p>Cliquez un en-tête pour trier, tapez pour filtrer. Durée et taux annoncé viennent de <code>projets.json</code> ; <span class="count" id="couverture"></span></p>
+          <p>Cliquez un en-tête pour trier, tapez pour filtrer. Durée et taux annoncé viennent de <code>projets.json</code> ; <span class="count" id="couverture"></span> Les revenus attendus et l’horizon en découlent : l’horizon compte les mois restants jusqu’à l’échéance, et devient négatif quand elle est dépassée.</p>
         </div>
         <div class="card">
           <div class="tools">
@@ -395,13 +398,13 @@
           <div class="twrap">
             <table class="t" id="t-projets">
               <thead><tr>
-                <th data-k="projet">Projet</th><th data-k="contrat">Contrat</th>
-                <th data-k="duree">Durée</th><th data-k="taux">Taux annoncé</th>
-                <th data-k="investi">Placé</th>
+                <th data-k="premier_achat">Date</th><th data-k="projet">Projet</th>
+                <th data-k="contrat">Contrat</th><th data-k="investi">Placé</th>
+                <th data-k="taux">Taux annoncé</th><th data-k="duree">Durée</th>
+                <th data-k="revenus_attendus">Revenus attendus</th><th data-k="horizon">Horizon</th>
                 <th data-k="capital_rembourse">Remboursé</th><th data-k="pct_rembourse">Part</th>
-                <th data-k="revenus">Revenus</th><th data-k="rendement_brut">Rdt brut</th><th data-k="tri">TRI</th>
-                <th data-k="nb_versements">Versements</th><th data-k="jours_detention">Jours</th>
-              <th data-k="mois_retard">Retard</th><th data-k="statut">État</th>
+                <th data-k="revenus">Revenus</th><th data-k="tri">TRI</th>
+                <th data-k="mois_retard">Retard</th><th data-k="statut">État</th>
               </tr></thead>
               <tbody></tbody>
             </table>
@@ -528,7 +531,7 @@
           <dl class="note"><dt>Revenus non perçus</dt><dd>Estimation, et non un montant dû : nombre de versements manqués multiplié par la moyenne des trois derniers versements du projet. Non calculable pour un projet qui n’a jamais versé, ou qui n’a versé qu’une fois.</dd></dl>
           <dl class="note"><dt>Confidentialité</dt><dd>Le fichier que vous déposez est lu par votre navigateur, sur votre appareil. Il n’est transmis à aucun serveur : le site qui héberge cette page ne reçoit que la demande de la page elle-même, jamais vos données. Celles-ci sont conservées dans le stockage local du navigateur et ne quittent pas cet appareil ; elles ne sont donc pas partagées entre vos appareils, et le bouton Réinitialiser les efface définitivement. Vider les données de navigation du site les supprime également ; il suffit alors de réimporter votre export.</dd></dl>
           <dl class="note"><dt>Projection</dt><dd>Elle applique le rendement des douze derniers mois au capital investi, mois après mois, et prélève l’impôt au taux moyen observé. L’onglet Projection détaille les quatre hypothèses qu’elle suppose ; aucune ne vient de Bricks.</dd></dl>
-          <dl class="note"><dt>Ce que l’export ne contient pas</dt><dd>Taux affiché à la souscription, échéance prévue, durée du projet, valorisation de marché et statut communiqué par Bricks. La durée et le taux annoncé viennent donc d’un fichier <code>projets.json</code> tenu à part, et non de l’export : les colonnes <em>Durée</em> et <em>Taux annoncé</em> affichent <em>données manquantes</em> pour tout projet qui n’y figure pas, plutôt qu’un zéro qui se confondrait avec une vraie valeur. Le reste du tableau, lui, ne dépend pas de ce fichier.</dd></dl>
+          <dl class="note"><dt>Ce que l’export ne contient pas</dt><dd>Taux affiché à la souscription, échéance prévue, durée du projet, valorisation de marché et statut communiqué par Bricks. La durée et le taux annoncé viennent donc d’un fichier <code>projets.json</code> tenu à part, et non de l’export : les colonnes <em>Durée</em> et <em>Taux annoncé</em> affichent <em>données manquantes</em> pour tout projet qui n’y figure pas, plutôt qu’un zéro qui se confondrait avec une vraie valeur. Deux colonnes en découlent, et affichent un tiret quand elles ne peuvent pas être calculées. Les <em>revenus attendus</em> valent capital placé × taux annoncé × durée : c’est le montant promis sur toute la vie du projet, à comparer à la colonne <em>Revenus</em> qui donne l’encaissé réel — un écart y est normal tant que le projet court. L’<em>horizon</em> compte les mois restants jusqu’à l’échéance, prise comme la date du premier achat plus la durée annoncée ; il devient négatif lorsque cette échéance est passée sans que le capital soit revenu, et reste vide sur un projet soldé. Faute d’échéance communiquée par Bricks, cette date est déduite, pas officielle. Le reste du tableau, lui, ne dépend pas de ce fichier.</dd></dl>
         </div>
       </section>
     </div>
@@ -1034,6 +1037,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     tbl.querySelectorAll('thead th').forEach((th, i) => {
       if (th.dataset.wired) return;
       th.dataset.wired = '1';
+      if (cols[i] && cols[i].nom) th.classList.add('nom');
       const label = th.textContent;
       th.replaceChildren();
       const b = document.createElement('button');
@@ -1086,7 +1090,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
         if (o.key) tr.setAttribute('data-key', String(r[o.key]));
         cols.forEach((c) => {
           const td = document.createElement('td');
-          if (c.num) td.className = 'cnum';
+          const classes = [];
+          if (c.num || c.mono) classes.push('cnum');
+          if (c.nom) classes.push('nom');
+          if (classes.length) td.className = classes.join(' ');
           if (c.bar) {
             const v = Math.max(0, Math.min(100, +r[c.k] || 0));
             const bar = document.createElement('span');
@@ -1506,14 +1513,36 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     if (data) { if (TS['t-projets']) TS['t-projets'].draw(); majCouverture(); }
   }
 
-  /* Les projets, enrichis de la durée et du taux annoncé quand le fichier les donne. */
+  /* Les projets, enrichis de ce que le fichier de référence permet de déduire :
+     la durée et le taux annoncés, puis le revenu théorique et l'horizon. Sans
+     durée ni taux, ces deux derniers restent nuls plutôt que d'être inventés. */
   function projetsEnrichis() {
     if (!data) return [];
+    const asof = new Date(data.synthese.date_export + 'T00:00:00Z');
     return data.projets.map((p) => {
       const e = baseProjets[p.projet] || {};
+      const duree = e.duree == null ? null : e.duree;
+      const taux = e.taux == null ? null : e.taux;
+
+      /* Revenu brut théorique sur toute la vie du projet, au taux et à la durée
+         annoncés : capital placé × taux × durée. C'est un montant promis, pas une
+         prévision — il ignore les remboursements anticipés comme les défauts. */
+      const attendus = (duree && taux)
+        ? Math.round(+p.investi * (taux / 100) * (duree / 12) * 100) / 100
+        : null;
+
+      /* Ce qu'il reste à courir jusqu'à l'échéance, déduite du premier achat plus
+         la durée annoncée. Négatif quand cette échéance est déjà passée ; sans
+         objet sur un projet soldé, où l'horizon n'a plus de sens. */
+      let horizon = null;
+      if (duree && p.premier_achat && p.statut !== 'Remboursé') {
+        const d = new Date(p.premier_achat + 'T00:00:00Z');
+        const fin = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + Math.round(duree), d.getUTCDate());
+        horizon = Math.round((fin - asof) / 86400000 / 30.44 * 100) / 100;
+      }
+
       return Object.assign({}, p, {
-        duree: e.duree == null ? null : e.duree,
-        taux: e.taux == null ? null : e.taux
+        duree: duree, taux: taux, revenus_attendus: attendus, horizon: horizon
       });
     });
   }
@@ -1686,7 +1715,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       .forEach((c, i) => { couleurContrat[c.contrat] = SERIES[i % SERIES.length]; });
     const totalEncours = data.contrats.reduce((a, c) => a + (+c.encours || 0), 0) || 1;
     table('t-contrats', [
-      { k: 'contrat', swatch: true }, { k: 'encours', num: true, f: eur }, { k: 'part', num: true, f: pct1 },
+      { k: 'contrat', swatch: true, nom: true }, { k: 'encours', num: true, f: eur }, { k: 'part', num: true, f: pct1 },
       { k: 'nb_projets', num: true, f: num }, { k: 'investi', num: true, f: eur },
       { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }
     ], () => data.contrats.map((c) => Object.assign({}, c, { part: 100 * (+c.encours || 0) / totalEncours })),
@@ -1696,25 +1725,26 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const jours = (v) => 'tous les ' + num(v) + ' j';
 
     table('t-vigilance', [
-      { k: 'projet' }, { k: 'contrat', f: CL }, { k: 'mois_retard', num: true, f: mois },
+      { k: 'projet', nom: true }, { k: 'contrat', f: CL }, { k: 'mois_retard', num: true, f: mois },
       { k: 'encours', num: true, f: eur }, { k: 'dernier_revenu', f: dmy }
     ], enRetard, { sort: 'mois_retard', limit: 5 });
 
     const MANQUE = 'données manquantes';
     table('t-projets', [
-      { k: 'projet' }, { k: 'contrat', f: CL },
-      { k: 'duree', num: true, f: moisEntier, vide: MANQUE },
-      { k: 'taux', num: true, f: pct, vide: MANQUE },
+      { k: 'premier_achat', f: dmy, mono: true }, { k: 'projet', nom: true }, { k: 'contrat', f: CL },
       { k: 'investi', num: true, f: eur },
+      { k: 'taux', num: true, f: pct, vide: MANQUE },
+      { k: 'duree', num: true, f: moisEntier, vide: MANQUE },
+      { k: 'revenus_attendus', num: true, f: eur2 },
+      { k: 'horizon', num: true, f: mois, neg: true },
       { k: 'capital_rembourse', num: true, f: eur2 }, { k: 'pct_rembourse', num: true, bar: true },
-      { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }, { k: 'tri', num: true, f: pct },
-      { k: 'nb_versements', num: true, f: num }, { k: 'jours_detention', num: true, f: num },
+      { k: 'revenus', num: true, f: eur2 }, { k: 'tri', num: true, f: pct },
       { k: 'mois_retard', num: true, f: mois }, { k: 'statut', pill: true }
     ], projetsEnrichis, { sort: 'investi', countEl: 'n-projets', filterKey: 'statut' });
     majCouverture();
 
     table('t-ops', [
-      { k: 'date', f: dmy }, { k: 'type' }, { k: 'projet' }, { k: 'contrat', f: CL },
+      { k: 'date', f: dmy, mono: true }, { k: 'type' }, { k: 'projet', nom: true }, { k: 'contrat', f: CL },
       { k: 'montant', num: true, f: eur2, neg: true }
     ], () => txRows, { sort: 'date', countEl: 'n-ops', limit: 400 });
 

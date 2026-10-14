@@ -334,6 +334,7 @@
       <div class="cell"><div class="cell-l">TRI net annualisé</div><div class="cell-v" data-f="tri_net">—</div><div class="cell-n"><b data-f="tri_brut">—</b> avant impôt</div></div>
       <div class="cell"><div class="cell-l">Projets en cours</div><div class="cell-v" data-f="nb_actifs">—</div><div class="cell-n"><b data-f="nb_rembourses">—</b> projets soldés</div></div>
       <div class="cell"><div class="cell-l">Solde disponible</div><div class="cell-v" data-f="solde_wallet">—</div><div class="cell-n">sur le wallet, non placé</div></div>
+      <div class="cell"><div class="cell-l">Remboursement sous 3 mois</div><div class="cell-v" id="remb3">—</div><div class="cell-n" id="remb3-n">—</div></div>
     </div>
 
     <nav class="tabs" role="tablist" aria-label="Vues du portefeuille">
@@ -1801,6 +1802,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       frag.append(tr);
     });
     corps.replaceChildren(frag);
+
+    /* La case du haut reprend exactement la ligne « d'ici 3 mois » du tableau :
+       un seul calcul, donc aucun risque que les deux divergent. */
+    const court = rangs.filter((r) => r.libelle === 'D’ici 3 mois')[0];
+    if ($('remb3')) {
+      const lot = court ? court.lot : [];
+      const echus = dates.filter((x) => x.horizon < 0);
+      $('remb3').textContent = eur(somme(lot));
+      $('remb3-n').textContent = lot.length
+        ? num(lot.length) + ' projet' + (lot.length > 1 ? 's' : '')
+          + (echus.length ? ', dont ' + eur(somme(echus)) + ' déjà échus' : '')
+        : (dates.length ? 'aucune échéance dans les trois mois' : 'aucune échéance connue');
+    }
 
     const bouts = ['Capital investi restant : ' + eur(encours) + ' sur ' + num(attente.length)
       + ' projet' + (attente.length > 1 ? 's' : '') + ' non soldé' + (attente.length > 1 ? 's' : '') + '.'];

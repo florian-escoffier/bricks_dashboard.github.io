@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DgrRigM8a8qJfc6kQeH1IHiZ6CGWt+YPvAO2audYSG8=' 'sha256-RYXwkG9UsEQxlBwWGuORGXxmxWJIBALJ/wF04RHJKdA=' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DgrRigM8a8qJfc6kQeH1IHiZ6CGWt+YPvAO2audYSG8=' 'sha256-zJs3+F+5g4y5jHMh8KNPGaWDwlFePfxxAg6cj0tUSrE=' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Portefeuille Bricks</title>
 <meta name="description" content="Suivi de portefeuille Bricks. Vos données restent dans votre navigateur.">
@@ -183,7 +183,7 @@
   .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .field i { font-style: normal; color: var(--muted); margin-left: -3px; }
 
-  .duo { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: 18px; align-items: center; }
+  .duo { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: 18px; align-items: center; }
   @media (max-width: 48rem) { .duo { grid-template-columns: 1fr; } }
   table.t td .sw { margin-right: 8px; vertical-align: baseline; }
 
@@ -255,12 +255,16 @@
   .ledger + .card { margin-top: 16px; }
   /* La même bande de chiffres, mais posée à l'intérieur d'une carte : elle
      n'a plus besoin d'ombre ni de cadre, la carte les porte déjà. */
+  /* Deux chiffres courts : ils tiennent côte à côte jusque sur un téléphone, et
+     le filet qui les sépare vaut mieux qu'un empilement sans repère. */
   .ledger-in { box-shadow: none; border: 0; border-radius: 0; margin: -4px 0 16px;
-      background: transparent; gap: 0 1px; }
-  .ledger-in .cell { background: transparent; padding: 0 16px 0 0; }
-  .ledger-in .cell + .cell { padding-left: 16px; border-left: 1px solid var(--line); }
-  @media (max-width: 44rem) {
-    .ledger-in .cell + .cell { padding-left: 0; border-left: 0; padding-top: 12px; }
+      background: transparent; gap: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ledger-in .cell { background: transparent; padding: 0 14px 0 0; }
+  .ledger-in .cell + .cell { padding-left: 14px; border-left: 1px solid var(--line); }
+  /* En deçà, la largeur ne suffit plus : on empile, en gardant un filet. */
+  @media (max-width: 20rem) {
+    .ledger-in { grid-template-columns: 1fr; }
+    .ledger-in .cell + .cell { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--line); }
   }
 
   .tip { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
@@ -355,6 +359,10 @@
         <div class="cards">
           <div class="card">
             <div class="card-h"><h3>Capital investi</h3><span id="sub-capital">À la fin de chaque mois</span></div>
+            <div class="total">
+              <div class="total-v" id="cap-total">—</div>
+              <div class="total-l" id="cap-label"></div>
+            </div>
             <div class="chart" id="c-capital" style="min-height:240px"></div>
           </div>
           <div class="card">
@@ -409,13 +417,12 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Remboursements</h2>
-          <p>Les trois indicateurs portent sur le capital <b>déjà rendu</b>, le tableau sur celui qui <b>reste dû</b>. Les horizons sont cumulatifs : « d’ici 12 mois » comprend les six premiers, et chacun inclut le capital dont l’échéance est dépassée.</p>
+          <p>Les deux indicateurs portent sur le capital <b>déjà rendu</b>, le tableau sur celui qui <b>reste dû</b>. Les horizons sont cumulatifs : « d’ici 12 mois » comprend les six premiers, et chacun inclut le capital dont l’échéance est dépassée.</p>
         </div>
         <div class="card">
           <div class="ledger ledger-in">
-            <div class="cell"><div class="cell-l">Totalement remboursés</div><div class="cell-v" id="r-soldes">—</div><div class="cell-n" id="r-soldes-n"></div></div>
-            <div class="cell"><div class="cell-l">Partiellement remboursés</div><div class="cell-v" id="r-partiels">—</div><div class="cell-n" id="r-partiels-n"></div></div>
             <div class="cell"><div class="cell-l">Capital remboursé</div><div class="cell-v" id="r-montant">—</div><div class="cell-n" id="r-montant-n"></div></div>
+            <div class="cell"><div class="cell-l">Projets soldés</div><div class="cell-v" id="r-soldes">—</div><div class="cell-n" id="r-soldes-n"></div></div>
           </div>
           <div class="twrap">
             <table class="t" id="t-echeances">
@@ -1413,6 +1420,21 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       d: new Date(r.mois + '-01T00:00:00Z'), total: +r.encours || 0,
       achats: +r.achats || 0, rembourse: +r.remboursements || 0
     }));
+    /* Le montant du dernier mois, c'est-à-dire le capital exposé à la date de
+       l'export : le même chiffre que la bande du haut, affiché sur le graphique
+       qui le raconte. */
+    if (rows.length) {
+      const dernier = rows[rows.length - 1];
+      const an = rows.length > 12 ? rows[rows.length - 13].total : rows[0].total;
+      const ecart = dernier.total - an;
+      $('cap-total').textContent = eur(dernier.total);
+      $('cap-label').textContent = 'au ' + dmy(data.synthese.date_export)
+        + (rows.length > 1
+          ? ' · ' + (ecart >= 0 ? '+' : '−') + eur(Math.abs(ecart)).replace('-', '')
+            + (rows.length > 12 ? ' sur douze mois' : ' depuis l’origine')
+          : '');
+    }
+
     const W = Math.max(300, el.clientWidth || 600), H = Math.max(230, Math.min(330, W * 0.5));
     const svg = mkSvg(el, W, H);
     if (rows.length < 2) return;
@@ -1565,6 +1587,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 76))).tickFormat(eur).tickSizeOuter(0)).call(axis);
     const tip = tipOf(card), bh = Math.min(opts.barH, y.bandwidth());
     rows.forEach((r, i) => {
+      /* Une bande invisible sur toute la largeur du graphique : au-delà de la fin
+         d'une barre courte, le pointeur — ou le doigt — doit encore trouver sa
+         ligne. Posée avant la barre, elle ne la masque pas. */
+      svg.append('rect').attr('x', m.l).attr('y', y(r.nom)).attr('width', Math.max(1, W - m.r - m.l))
+        .attr('height', y.bandwidth()).style('fill', 'transparent').style('pointer-events', 'all')
+        .on('mousemove', (ev) => tipShow(tip, card, ev, r.nom, r.lines))
+        .on('mouseleave', () => { tip.style.opacity = '0'; });
       svg.append('rect').attr('x', m.l).attr('y', y(r.nom) + (y.bandwidth() - bh) / 2)
         .attr('width', Math.max(1, x(r.v) - m.l)).attr('height', bh).attr('rx', 3)
         .style('fill', opts.color ? opts.color(i) : 'var(--s1)')
@@ -1577,44 +1606,32 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     });
   }
 
+  /* Barres horizontales plutôt qu'un camembert : trois longueurs se comparent
+     d'un coup d'œil, là où trois angles se devinent — et une part de 1,5 % reste
+     lisible en barre. Même assistant que les autres histogrammes de la page. */
   function drawContrats() {
-    const el = $('c-contrats');
-    if (!el || !data) return;
-    const card = el.closest('.card');
+    if (!data) return;
     const rows = data.contrats.map((r) => ({
       nom: r.contrat, v: +r.encours || 0, inv: +r.investi || 0,
       n: +r.nb_projets || 0, rdt: +r.rendement_brut || 0
     })).filter((r) => r.v > 0.005).sort((a, b) => b.v - a.v);
-    const total = rows.reduce((a, r) => a + r.v, 0);
+    const total = rows.reduce((a, r) => a + r.v, 0) || 1;
 
-    const W = Math.max(200, el.clientWidth || 300), H = Math.max(200, Math.min(260, W));
-    const svg = mkSvg(el, W, H);
-    if (!rows.length || total <= 0) return;
-
-    const rayon = Math.min(W, H) / 2 - 8;
-    const g = svg.append('g').attr('transform', `translate(${W / 2},${H / 2})`);
-    const parts = d3.pie().sort(null).value((d) => d.v)(rows);
-    const arc = d3.arc().innerRadius(0).outerRadius(rayon).padAngle(0.012).cornerRadius(2);
-    const tip = tipOf(card);
-    parts.forEach((p, i) => {
-      const couleur = couleurContrat[p.data.nom] || SERIES[i % SERIES.length], part = p.data.v / total;
-      g.append('path').attr('d', arc(p)).style('fill', couleur)
-        .style('stroke', 'var(--panel)').attr('stroke-width', 1.5)
-        .on('mousemove', (ev) => tipShow(tip, card, ev, p.data.nom, [
-          { c: couleur, t: 'Capital investi · ' + eur(p.data.v) },
-          { t: 'Part du portefeuille · ' + pct1(100 * part) },
-          { t: 'Total placé · ' + eur(p.data.inv) },
-          { t: 'Projets · ' + num(p.data.n) },
-          { t: 'Rendement brut · ' + pct(p.data.rdt) }
-        ]))
-        .on('mouseleave', () => { tip.style.opacity = '0'; });
-      /* la part n'est écrite dans la tranche que si elle y tient */
-      if (part >= 0.08) {
-        const c = arc.centroid(p);
-        g.append('text').attr('x', c[0]).attr('y', c[1] + 4).attr('text-anchor', 'middle')
-          .attr('font-size', 12.5).attr('font-weight', 500).style('fill', 'var(--bg)')
-          .text(Math.round(part * 100) + ' %');
-      }
+    hbars('c-contrats', rows.map((r) => ({
+      nom: r.nom, v: r.v,
+      lines: [
+        { c: couleurContrat[r.nom], t: 'Capital investi · ' + eur(r.v) },
+        { t: 'Part du portefeuille · ' + pct1(100 * r.v / total) },
+        { t: 'Total placé · ' + eur(r.inv) },
+        { t: 'Projets · ' + num(r.n) },
+        { t: 'Rendement brut · ' + pct(r.rdt) }
+      ]
+    })), {
+      rowH: 46, barH: 24, cut: 20, minH: 200,
+      /* À droite, la part plutôt que le montant : l'axe donne déjà les euros,
+         et une étiquette courte ne risque pas de sortir de la carte. */
+      fmt: (v) => pct1(100 * v / total),
+      color: (i) => couleurContrat[rows[i].nom] || SERIES[i % SERIES.length]
     });
   }
 
@@ -1756,23 +1773,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     if (!data || !$('t-echeances')) return;
     const lignes = projetsEnrichis();
     const soldes = lignes.filter((p) => p.statut === 'Remboursé');
-    const partiels = lignes.filter((p) => p.statut === 'Partiel');
     const place = lignes.reduce((a, p) => a + (+p.investi || 0), 0);
     const rembourse = lignes.reduce((a, p) => a + (+p.capital_rembourse || 0), 0);
     const encours = lignes.reduce((a, p) => a + (+p.encours || 0), 0);
 
+    $('r-montant').textContent = eur(rembourse);
+    $('r-montant-n').textContent = 'sur ' + eur(place) + ' placés, soit '
+      + pct1(place ? 100 * rembourse / place : 0);
     $('r-soldes').textContent = num(soldes.length);
     $('r-soldes-n').textContent = soldes.length
       ? eur(soldes.reduce((a, p) => a + (+p.capital_rembourse || 0), 0)) + ' rendus intégralement'
       : 'aucun projet soldé pour l’instant';
-    $('r-partiels').textContent = num(partiels.length);
-    $('r-partiels-n').textContent = partiels.length
-      ? eur(partiels.reduce((a, p) => a + (+p.capital_rembourse || 0), 0)) + ' déjà rendus sur '
-        + eur(partiels.reduce((a, p) => a + (+p.investi || 0), 0)) + ' placés'
-      : 'aucun remboursement partiel en cours';
-    $('r-montant').textContent = eur(rembourse);
-    $('r-montant-n').textContent = 'sur ' + eur(place) + ' placés, soit '
-      + pct1(place ? 100 * rembourse / place : 0);
 
     /* Seuls les projets non soldés ont encore du capital à rendre. */
     const attente = lignes.filter((p) => p.statut !== 'Remboursé' && (+p.encours || 0) > 0.005);

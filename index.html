@@ -52,6 +52,10 @@
   .hd-l { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .hd h1 { font-family: var(--disp); font-weight: 400; font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); letter-spacing: -.01em; text-wrap: balance; }
   .hd h1 .brand { color: var(--accent); }
+  /* Logo incorporé à la page : rien à déposer à côté, rien à charger.
+     Dimensionné en em, il grandit avec le titre. */
+  .hd h1 .logo { width: 1.1em; height: 1.1em; border-radius: .2em;
+      vertical-align: -.2em; margin-right: .38em; }
   .hd-meta { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
   .hd-meta b { font-weight: 500; color: var(--ink); }
   .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--line); }
@@ -245,6 +249,15 @@
   .count { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   p.count { margin: 6px 0 0; }
   .ledger + .card { margin-top: 16px; }
+  /* La même bande de chiffres, mais posée à l'intérieur d'une carte : elle
+     n'a plus besoin d'ombre ni de cadre, la carte les porte déjà. */
+  .ledger-in { box-shadow: none; border: 0; border-radius: 0; margin: -4px 0 16px;
+      background: transparent; gap: 0 1px; }
+  .ledger-in .cell { background: transparent; padding: 0 16px 0 0; }
+  .ledger-in .cell + .cell { padding-left: 16px; border-left: 1px solid var(--line); }
+  @media (max-width: 44rem) {
+    .ledger-in .cell + .cell { padding-left: 0; border-left: 0; padding-top: 12px; }
+  }
 
   .tip { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
          box-shadow: var(--shadow); padding: 7px 10px; font-size: .78rem; pointer-events: none; opacity: 0; z-index: 5; white-space: nowrap; }
@@ -282,7 +295,7 @@
 <div class="app">
   <header class="hd">
     <div class="hd-l">
-      <h1>Portefeuille <span class="brand">Bricks</span></h1>
+      <h1><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAxEHz4AAAAMFBMVEX//////v3//fz//Pz+5+D+z8L9tKD7a0P7ZDr7Yzn7Yjn7Yjj7Yjf7XjP7WS37VyrLCD0bAAACBElEQVR42u2ZPywEQRTG3+xSsouEhLsz7gQVl7tEcQkJBQ21RjQSSqVeI3rNKTQqRCJXaIQICQVCtMKdPQ0SFv2uwv9575IZFMjbavO+3V++mX3z5u2uWIfvHRYwgAEM+B2AsrezMx+JNRIAAA6J+14kAPFaD4IWR71IXBUBACBNAG481cHlRh4BWmMSALwl7A3aYvIzIMgsbKGr+oc9gCAzSjiY8BUHYeNOHDnYfB5VCjtw8STeOecIUPM8B7cFBEgSj5EYqO9zKjOAAQz4SlkvfTwmXCUSmgGixzjWpQ+wdvs6CWiHvoNIr8TBA18fYC0SwbTJHKQ5ExnwE6uR6LLspAmgMK4uZ7jOSX1A0DOJYnUDD/qA4sEcipWPGAAeT1NC7X0qZiNJbUB77hz1SvG7iP5jDEIixqnMgP8LcLHoSoOSVnWPtkC/GC1oA+y9wVUkDl0YOMhP12LAttQHRPeyqhbum8yBVT+DxIRrsi/Yac5EBny/wQiOTHtU9SPMGKGu6C+mIDNOjG/K0waEsWVCnDIYgp9Au7gQJvUA8gEC2JIzkQEMYMCPAoQgYkRFasLdhChIADhx4uiVp7IKAdwzot51ewDgNOP2q2zQVQDCGytltCFzjxxUD6tf963dLPFqNS8BwF7LIoAz/1pv3/8vEFubSJWSXpSPAM5EBjDgrwOeAFWddLKNP5eIAAAAAElFTkSuQmCC" alt="" width="128" height="128" decoding="async">Portefeuille <span class="brand">Bricks</span></h1>
       <div class="hd-meta" id="meta"><span class="skel">&nbsp;</span></div>
     </div>
     <div class="hd-r" id="actions" hidden>
@@ -314,11 +327,9 @@
   <div id="corps" hidden>
     <div class="ledger" id="ledger">
       <div class="cell"><div class="cell-l">Capital investi</div><div class="cell-v" data-f="encours">—</div><div class="cell-n">total placé moins capital remboursé</div></div>
-      <div class="cell"><div class="cell-l">Total placé</div><div class="cell-v" data-f="capital_investi">—</div><div class="cell-n">sur <b data-f="nb_projets">—</b> projets</div></div>
       <div class="cell"><div class="cell-l">Revenus nets encaissés</div><div class="cell-v" data-f="encaisse_net">—</div><div class="cell-n">après <b data-f="prelevement_source">—</b> d’impôt · dont <b data-f="bonus">—</b> de primes</div></div>
       <div class="cell"><div class="cell-l">TRI net annualisé</div><div class="cell-v" data-f="tri_net">—</div><div class="cell-n"><b data-f="tri_brut">—</b> avant impôt</div></div>
-      <div class="cell"><div class="cell-l">Capital remboursé</div><div class="cell-v" data-f="capital_rembourse">—</div><div class="cell-n"><b data-f="nb_rembourses">—</b> projets soldés</div></div>
-      <div class="cell"><div class="cell-l">Projets en cours</div><div class="cell-v" data-f="nb_actifs">—</div><div class="cell-n">ticket moyen <b data-f="ticket_moyen">—</b></div></div>
+      <div class="cell"><div class="cell-l">Projets en cours</div><div class="cell-v" data-f="nb_actifs">—</div><div class="cell-n"><b data-f="nb_rembourses">—</b> projets soldés</div></div>
     </div>
 
     <nav class="tabs" role="tablist" aria-label="Vues du portefeuille">
@@ -386,6 +397,30 @@
               </table>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-h">
+          <h2>Remboursements</h2>
+          <p>Ce qui est déjà revenu, et ce que les durées annoncées laissent attendre. Les trois horizons sont cumulatifs — « d’ici 12 mois » comprend les six premiers — et incluent le capital dont l’échéance est déjà passée.</p>
+        </div>
+        <div class="card">
+          <div class="ledger ledger-in">
+            <div class="cell"><div class="cell-l">Totalement remboursés</div><div class="cell-v" id="r-soldes">—</div><div class="cell-n" id="r-soldes-n"></div></div>
+            <div class="cell"><div class="cell-l">Partiellement remboursés</div><div class="cell-v" id="r-partiels">—</div><div class="cell-n" id="r-partiels-n"></div></div>
+            <div class="cell"><div class="cell-l">Capital remboursé</div><div class="cell-v" id="r-montant">—</div><div class="cell-n" id="r-montant-n"></div></div>
+          </div>
+          <div class="twrap">
+            <table class="t" id="t-echeances">
+              <thead><tr>
+                <th>Échéance</th><th>Capital attendu</th>
+                <th>Projets</th><th>Part du capital investi</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="count" id="r-note"></p>
         </div>
       </section>
 
@@ -1572,7 +1607,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       if (r.ok) refFichier = (await r.json()) || {};
     } catch (e) { /* pas de fichier de référence : cas normal */ }
     fusionnerReference();
-    if (data) { if (TS['t-projets']) TS['t-projets'].draw(); majCouverture(); }
+    if (data) { if (TS['t-projets']) TS['t-projets'].draw(); majCouverture(); majRemboursements(); }
   }
 
   /* Les projets, enrichis de ce que le fichier de référence permet de déduire :
@@ -1607,6 +1642,80 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
         duree: duree, taux: taux, revenus_attendus: attendus, horizon: horizon
       });
     });
+  }
+
+  /* ---------- remboursements ----------
+     Le capital attendu est l'encours d'un projet, c'est-à-dire ce qu'il reste à
+     rendre, rangé par échéance déduite. Un projet sans durée connue n'a pas
+     d'échéance : il est compté à part plutôt que rangé arbitrairement. */
+  const HORIZONS = [6, 12, 24];
+
+  function majRemboursements() {
+    if (!data || !$('t-echeances')) return;
+    const lignes = projetsEnrichis();
+    const soldes = lignes.filter((p) => p.statut === 'Remboursé');
+    const partiels = lignes.filter((p) => p.statut === 'Partiel');
+    const place = lignes.reduce((a, p) => a + (+p.investi || 0), 0);
+    const rembourse = lignes.reduce((a, p) => a + (+p.capital_rembourse || 0), 0);
+    const encours = lignes.reduce((a, p) => a + (+p.encours || 0), 0);
+
+    $('r-soldes').textContent = num(soldes.length);
+    $('r-soldes-n').textContent = soldes.length
+      ? eur(soldes.reduce((a, p) => a + (+p.capital_rembourse || 0), 0)) + ' rendus intégralement'
+      : 'aucun projet soldé pour l’instant';
+    $('r-partiels').textContent = num(partiels.length);
+    $('r-partiels-n').textContent = partiels.length
+      ? eur(partiels.reduce((a, p) => a + (+p.capital_rembourse || 0), 0)) + ' déjà rendus sur '
+        + eur(partiels.reduce((a, p) => a + (+p.investi || 0), 0)) + ' placés'
+      : 'aucun remboursement partiel en cours';
+    $('r-montant').textContent = eur(rembourse);
+    $('r-montant-n').textContent = 'sur ' + eur(place) + ' placés, soit '
+      + pct1(place ? 100 * rembourse / place : 0);
+
+    /* Seuls les projets non soldés ont encore du capital à rendre. */
+    const attente = lignes.filter((p) => p.statut !== 'Remboursé' && (+p.encours || 0) > 0.005);
+    const dates = attente.filter((p) => p.horizon !== null);
+    const sans = attente.filter((p) => p.horizon === null);
+    const somme = (l) => l.reduce((a, p) => a + (+p.encours || 0), 0);
+
+    const rangs = [{
+      libelle: 'Échéance déjà dépassée',
+      lot: dates.filter((p) => p.horizon < 0)
+    }].concat(HORIZONS.map((h) => ({
+      libelle: 'D’ici ' + h + ' mois',
+      lot: dates.filter((p) => p.horizon <= h)
+    })));
+
+    const corps = $('t-echeances').querySelector('tbody');
+    const frag = document.createDocumentFragment();
+    rangs.forEach((r) => {
+      const montant = somme(r.lot);
+      const tr = document.createElement('tr');
+      [[r.libelle, 'nom'], [eur(montant), 'cnum'], [num(r.lot.length), 'cnum'],
+       [encours ? pct1(100 * montant / encours) : '—', 'cnum']].forEach(([t, cl]) => {
+        const td = document.createElement('td');
+        td.className = cl;
+        td.textContent = t;
+        tr.append(td);
+      });
+      frag.append(tr);
+    });
+    corps.replaceChildren(frag);
+
+    const bouts = ['Capital investi restant : ' + eur(encours) + ' sur ' + num(attente.length)
+      + ' projet' + (attente.length > 1 ? 's' : '') + ' non soldé' + (attente.length > 1 ? 's' : '') + '.'];
+    if (sans.length) {
+      bouts.push(num(sans.length) + ' projet' + (sans.length > 1 ? 's' : '') + ' sans durée dans '
+        + 'projets.json, soit ' + eur(somme(sans)) + ', n’' + (sans.length > 1 ? 'ont' : 'a')
+        + ' pas d’échéance et ne figure' + (sans.length > 1 ? 'nt' : '') + ' dans aucune ligne.');
+    }
+    const loin = dates.filter((p) => p.horizon > HORIZONS[HORIZONS.length - 1]);
+    if (loin.length) {
+      bouts.push(eur(somme(loin)) + ' sur ' + num(loin.length) + ' projet' + (loin.length > 1 ? 's' : '')
+        + ' ' + (loin.length > 1 ? 'arrivent' : 'arrive') + ' à échéance au-delà de '
+        + HORIZONS[HORIZONS.length - 1] + ' mois.');
+    }
+    $('r-note').textContent = bouts.join(' ');
   }
 
   function majCouverture() {
@@ -1792,6 +1901,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     ], enRetard, { sort: 'mois_retard', limit: 5 });
 
     const MANQUE = 'données manquantes';
+    /* Tri par défaut : le dernier projet entré en portefeuille en haut. Les dates
+       sont au format ISO, leur ordre alphabétique est donc leur ordre chronologique. */
     table('t-projets', [
       { k: 'premier_achat', f: dmy, mono: true }, { k: 'projet', nom: true }, { k: 'contrat', f: CL },
       { k: 'investi', num: true, f: eur },
@@ -1802,8 +1913,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       { k: 'capital_rembourse', num: true, f: eur2 }, { k: 'pct_rembourse', num: true, bar: true },
       { k: 'revenus', num: true, f: eur2 }, { k: 'tri', num: true, f: pct },
       { k: 'mois_retard', num: true, f: mois }, { k: 'statut', pill: true }
-    ], projetsEnrichis, { sort: 'investi', countEl: 'n-projets', filterKey: 'statut' });
+    ], projetsEnrichis, { sort: 'premier_achat', countEl: 'n-projets', filterKey: 'statut' });
     majCouverture();
+    majRemboursements();
 
     table('t-ops', [
       { k: 'date', f: dmy, mono: true }, { k: 'type' }, { k: 'projet', nom: true }, { k: 'contrat', f: CL },
@@ -1880,6 +1992,15 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     return bouts.length ? bouts.join(', ') : 'aucun filtre';
   }
 
+  /* Le tri se nomme par l'intitulé de sa colonne, pas par la clé interne : c'est
+     ce que le lecteur a sous les yeux à l'écran. */
+  function phraseTri(st) {
+    const i = (st.cols || []).findIndex((c) => c.k === st.key);
+    const th = $('t-projets').querySelectorAll('thead th')[i];
+    const nom = (i >= 0 && th) ? th.textContent.replace(/[↑↓]\s*$/, '').trim() : String(st.key || '');
+    return nom.toLowerCase() + (st.dir === 'asc' ? ' croissant' : ' décroissant');
+  }
+
   function blocTitre(st) {
     const d = document.createElement('div');
     const titre = document.createElement('h1');
@@ -1890,7 +2011,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     chapeau.innerHTML = 'Export Bricks du <b>' + dmy(data.synthese.date_export) + '</b> · <b>'
       + num(st.lignes.length) + '</b> projet' + (st.lignes.length > 1 ? 's' : '')
       + ' sur ' + num(data.projets.length) + ' · ' + phraseFiltre()
-      + ' · trié par ' + (st.key || 'investi') + (st.dir === 'asc' ? ' croissant' : ' décroissant');
+      + ' · trié par ' + phraseTri(st);
     d.append(titre, chapeau);
     return d;
   }

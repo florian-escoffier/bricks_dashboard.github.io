@@ -185,10 +185,43 @@
   .sec-h code { font-family: var(--num); font-size: .9em; }
 
   /* ---------- impression ----------
-     Le tableau part sur le papier dans un document à lui, construit au moment
-     de l'export : l'interface sombre, les onglets et les filtres n'ont rien à
-     y faire, et l'encre non plus. */
+     Le document de papier est découpé en pages par l'application, et non par le
+     navigateur : chacun répète l'en-tête d'un tableau et respecte les coupures
+     de ligne à sa façon, quand il les respecte. Une page = une section qui porte
+     son propre tableau, en-tête compris. Ces styles valent aussi hors impression,
+     car il faut pouvoir mesurer les hauteurs avant de découper. */
+  .papier { color: #000; background: #fff;
+      font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 7.4pt; line-height: 1.3; }
+  .papier .titre { font-family: 'Newsreader', Georgia, serif; font-size: 15pt;
+      font-weight: 400; margin: 0 0 2mm; color: #000; }
+  .papier .chapeau { margin: 0 0 3.5mm; font-size: 7.6pt; color: #444; }
+  .papier .chapeau b { color: #000; font-weight: 600; }
+
+  .papier table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  /* Un filet sur les quatre côtés de chaque cellule : c'est ce quadrillage qui
+     permet de suivre une ligne de 14 colonnes sans se perdre. */
+  .papier th, .papier td { text-align: right; padding: 0.9mm 1.1mm;
+      border: .5pt solid #9b9b9b; white-space: nowrap;
+      font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
+  /* Rien de collant ni de sombre sur le papier : un en-tête en position: sticky
+     disparaît à l'impression chez Safari, et la couleur d'écran serait illisible
+     sur blanc. */
+  .papier thead th { font-weight: 600; font-size: 7pt; color: #000 !important;
+      position: static !important; top: auto !important;
+      background: transparent !important; visibility: visible !important;
+      border-bottom: 1pt solid #333; }
+  .papier .nom { text-align: left; white-space: normal; }
+  .papier .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 6.9pt; }
+  .papier .manque { color: #777; font-style: italic; }
+  .papier .neg { color: #000; font-weight: 600; }
+  .papier tfoot td { border-top: 1pt solid #333; font-weight: 600; }
+  .papier .pied { margin-top: 3.5mm; font-size: 6.6pt; color: #555; }
+  .papier .folio { margin-top: 2mm; font-size: 6.6pt; color: #666; text-align: right; }
+
   #impression { display: none; }
+  /* L'exemplaire de mesure occupe la largeur du papier, hors du champ de vision :
+     « visibility: hidden » le rend invisible tout en lui laissant une mise en page. */
+  #mesure { position: absolute; left: -20000px; top: 0; visibility: hidden; }
 
   @media print {
     @page { size: A4 landscape; margin: 9mm 10mm 12mm; }
@@ -197,38 +230,12 @@
     /* Toute l'interface vit dans .app : la masquer suffit à ne laisser que le
        document d'export, infobulles comprises. */
     body > .app { display: none !important; }
+    #mesure { display: none !important; }
 
-    #impression { display: block !important; color: #000;
-        font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 7.4pt; line-height: 1.3; }
-    #impression .titre { font-family: 'Newsreader', Georgia, serif; font-size: 15pt;
-        font-weight: 400; margin: 0 0 2mm; }
-    #impression .chapeau { margin: 0 0 4mm; font-size: 7.6pt; color: #444; }
-    #impression .chapeau b { color: #000; font-weight: 600; }
-
-    #impression table { width: 100%; border-collapse: collapse; }
-    #impression th, #impression td { text-align: right; padding: 1.1mm 1.6mm;
-        border-bottom: .2pt solid #ccc; white-space: nowrap;
-        font-variant-numeric: tabular-nums; }
-    /* Rien de collant ni de sombre sur le papier : un en-tête en position: sticky
-       disparaît à l'impression chez Safari, et la couleur d'écran serait illisible
-       sur blanc. Ces remises à zéro valent même si un style d'interface revenait
-       s'appliquer au tableau copié. */
-    #impression thead th { border-bottom: .6pt solid #333; font-weight: 600;
-        font-size: 7pt; color: #000 !important; position: static !important;
-        top: auto !important; background: transparent !important; visibility: visible !important; }
-    /* L'en-tête se répète en haut de chaque page, et aucune ligne n'est coupée. */
-    #impression thead { display: table-header-group !important; break-inside: avoid; }
+    #impression { display: block !important; }
+    #impression .page { break-after: page; page-break-after: always; break-inside: avoid; }
+    #impression .page:last-child { break-after: auto; page-break-after: auto; }
     #impression tr { break-inside: avoid; page-break-inside: avoid; }
-    #impression .nom { text-align: left; white-space: normal; }
-    #impression .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 6.9pt; }
-    #impression .manque { color: #777; font-style: italic; }
-    #impression .neg { color: #000; font-weight: 600; }
-    /* Le total ne vaut que pour l'ensemble : laissé en pied de tableau, Chromium
-       le répèterait au bas de chaque page comme s'il s'agissait d'un sous-total. */
-    #impression tfoot { display: table-row-group; }
-    #impression tfoot td { border-top: .6pt solid #333; border-bottom: 0;
-        font-weight: 600; padding-top: 1.6mm; }
-    #impression .pied { margin-top: 4mm; font-size: 6.6pt; color: #555; }
   }
 
   .total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -1840,8 +1847,26 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
 
   /* ---------- export du tableau des projets ----------
      Pas de bibliothèque PDF : le navigateur en fabrique un bien meilleur que ce
-     qu'on dessinerait à la main, avec du texte sélectionnable et l'en-tête répété
-     à chaque page. On lui donne simplement un document propre à imprimer. */
+     qu'on dessinerait à la main, avec du texte sélectionnable. En revanche on ne
+     lui confie pas la pagination — ni la répétition de l'en-tête ni le refus de
+     couper une ligne ne sont tenus de la même manière d'un navigateur à l'autre.
+     On mesure donc le tableau hors écran, on le découpe en pages, et chaque page
+     reçoit son propre tableau complet. */
+
+  /* A4 paysage, marges déduites : la surface réellement imprimable. */
+  const PAPIER = { largeur: 277, hauteur: 189, garde: 4 };
+
+  /* Convertit des millimètres en pixels de mise en page, en interrogeant le
+     navigateur plutôt qu'en appliquant une constante. */
+  function enPixels(mm) {
+    const sonde = document.createElement('div');
+    sonde.style.cssText = 'position:absolute;visibility:hidden;width:1mm;height:' + mm + 'mm';
+    document.body.append(sonde);
+    const h = sonde.getBoundingClientRect().height;
+    sonde.remove();
+    return h;
+  }
+
   function phraseFiltre() {
     const st = TS['t-projets'] || {};
     const bouts = [];
@@ -1851,16 +1876,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     return bouts.length ? bouts.join(', ') : 'aucun filtre';
   }
 
-  function preparerImpression() {
-    if (!data) return;
-    const st = TS['t-projets'];
-    const source = $('t-projets');
-    if (!st || !source) return;
-    nettoyerImpression();
-
-    const boite = document.createElement('div');
-    boite.id = 'impression';
-
+  function blocTitre(st) {
+    const d = document.createElement('div');
     const titre = document.createElement('h1');
     titre.className = 'titre';
     titre.textContent = 'Portefeuille Bricks — tous les projets';
@@ -1870,15 +1887,57 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       + num(st.lignes.length) + '</b> projet' + (st.lignes.length > 1 ? 's' : '')
       + ' sur ' + num(data.projets.length) + ' · ' + phraseFiltre()
       + ' · trié par ' + (st.key || 'investi') + (st.dir === 'asc' ? ' croissant' : ' décroissant');
+    d.append(titre, chapeau);
+    return d;
+  }
+
+  function blocFolio() {
+    const f = document.createElement('p');
+    f.className = 'folio';
+    f.textContent = 'page 0 sur 0';
+    return f;
+  }
+
+  function blocPied() {
+    const p = document.createElement('p');
+    p.className = 'pied';
+    p.textContent = 'Durée et taux annoncé proviennent de projets.json et non de l’export Bricks ; '
+      + 'les revenus attendus et l’horizon en découlent. L’horizon devient négatif passé l’échéance, '
+      + 'et reste vide sur un projet soldé. Document produit le ' + dmy(new Date().toISOString()) + '.';
+    return p;
+  }
+
+  /* Totaux des seules colonnes qui s'additionnent. Un taux, une durée, un TRI
+     ou une part ne se somment pas : leur case reste vide plutôt que fausse. */
+  function blocTotaux(st) {
+    const SOMMES = { investi: eur, revenus_attendus: eur2, capital_rembourse: eur2, revenus: eur2 };
+    const pied = document.createElement('tfoot');
+    const tr = document.createElement('tr');
+    st.cols.forEach((c, i) => {
+      const td = document.createElement('td');
+      if (i === 0) { td.textContent = 'Total'; td.className = 'nom'; }
+      else if (SOMMES[c.k]) {
+        td.textContent = SOMMES[c.k](st.lignes.reduce((a, r) => a + (+r[c.k] || 0), 0));
+        td.className = 'cnum';
+      }
+      tr.append(td);
+    });
+    pied.append(tr);
+    return pied;
+  }
+
+  function preparerImpression() {
+    /* Le clic construit déjà le document ; le « beforeprint » qui suit ne doit pas
+       le refaire sous les pieds du moteur de mise en page. */
+    if (!data || $('impression')) return;
+    const st = TS['t-projets'], source = $('t-projets');
+    if (!st || !source || !st.lignes) return;
 
     /* Le tableau imprimé est une copie de celui affiché : mêmes lignes, mêmes
-       formats, aucun risque de divergence entre l'écran et le papier. */
+       formats, aucun risque de divergence entre l'écran et le papier. La classe
+       « t » porte les styles de l'interface : on s'en débarrasse. */
     const copie = source.cloneNode(true);
     copie.removeAttribute('id');
-    /* La classe « t » porte les styles de l'écran, dont un en-tête en
-       position: sticky et une couleur pensée pour le fond sombre. À l'impression,
-       Safari escamote un en-tête collant : le tableau de papier n'hérite de rien
-       et se repose sur la feuille #impression. */
     copie.removeAttribute('class');
     copie.querySelectorAll('thead th').forEach((th) => {
       const b = th.querySelector('button');
@@ -1888,43 +1947,109 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     /* La barre de progression ne s'imprime pas : son étiquette chiffrée suffit. */
     copie.querySelectorAll('.bar').forEach((b) => b.remove());
 
-    /* Totaux des seules colonnes qui s'additionnent. Un taux, une durée, un TRI
-       ou une part ne se somment pas : leur case reste vide plutôt que fausse. */
-    const SOMMES = { investi: eur, revenus_attendus: eur2, capital_rembourse: eur2, revenus: eur2 };
-    const pied = document.createElement('tfoot');
-    const tr = document.createElement('tr');
-    st.cols.forEach((c, i) => {
-      const td = document.createElement('td');
-      if (i === 0) {
-        td.textContent = 'Total';
-        td.className = 'nom';
-      } else if (SOMMES[c.k]) {
-        const s = st.lignes.reduce((a, r) => a + (+r[c.k] || 0), 0);
-        td.textContent = SOMMES[c.k](s);
-        td.className = 'cnum';
-      }
-      tr.append(td);
+    const titre = blocTitre(st);
+    const pied = blocPied();
+    const folio = blocFolio();
+    const totaux = blocTotaux(st);
+
+    /* ---- mesure, à la largeur exacte du papier ---- */
+    const mesure = document.createElement('div');
+    mesure.id = 'mesure';
+    mesure.className = 'papier';
+    mesure.style.width = PAPIER.largeur + 'mm';
+    copie.style.tableLayout = 'auto';
+    /* Le pied est en place dès la mesure : ses montants sont en gras, donc plus
+       larges, et c'est lui qui décide de la largeur de certaines colonnes. */
+    copie.append(totaux);
+    mesure.append(titre, copie, pied, folio);
+    document.body.append(mesure);
+
+    /* Largeurs figées une fois pour toutes : sans cela chaque page calculerait
+       les siennes d'après son seul contenu, et les colonnes ne se superposeraient
+       plus d'une page à l'autre. */
+    const entetes = Array.from(copie.querySelectorAll('thead th'));
+    const brutes = entetes.map((th) => th.getBoundingClientRect().width);
+    const somme = brutes.reduce((a, b) => a + b, 0) || 1;
+    const colgroup = document.createElement('colgroup');
+    brutes.forEach((w) => {
+      const col = document.createElement('col');
+      col.style.width = (100 * w / somme).toFixed(4) + '%';
+      colgroup.append(col);
     });
-    pied.append(tr);
-    copie.append(pied);
+    copie.prepend(colgroup.cloneNode(true));
+    copie.style.tableLayout = 'fixed';
 
-    const pied2 = document.createElement('p');
-    pied2.className = 'pied';
-    pied2.textContent = 'Durée et taux annoncé proviennent de projets.json et non de l’export Bricks ; '
-      + 'les revenus attendus et l’horizon en découlent. L’horizon devient négatif passé l’échéance, '
-      + 'et reste vide sur un projet soldé. Document produit le ' + dmy(new Date().toISOString()) + '.';
+    const hUtile = enPixels(PAPIER.hauteur - PAPIER.garde);
+    const hTitre = titre.getBoundingClientRect().height;
+    const hPied = pied.getBoundingClientRect().height;
+    /* Le numéro de page occupe le bas de chaque page : il se réserve partout. */
+    const hFolio = folio.getBoundingClientRect().height;
+    const thead = copie.querySelector('thead');
+    const hThead = thead.getBoundingClientRect().height;
+    const hTotaux = totaux.getBoundingClientRect().height;
+    const lignes = Array.from(copie.querySelectorAll('tbody tr'));
+    const hauteurs = lignes.map((tr) => tr.getBoundingClientRect().height);
 
-    boite.append(titre, chapeau, copie, pied2);
+    /* ---- découpage ---- */
+    const pages = [];
+    const capacite = hUtile - hThead - hFolio;
+    let courante = [], reste = capacite - hTitre;
+    lignes.forEach((tr, i) => {
+      if (courante.length && hauteurs[i] > reste) {
+        pages.push(courante);
+        courante = [];
+        reste = capacite;
+      }
+      courante.push(tr);
+      reste -= hauteurs[i];
+    });
+    if (courante.length) pages.push(courante);
+    if (!pages.length) pages.push([]);
+    /* Les totaux et la note finale ne se séparent pas du tableau : s'ils ne tiennent
+       plus, ils emportent une page à eux. */
+    const aPart = reste < hTotaux + hPied;
+
+    /* ---- assemblage ---- */
+    const boite = document.createElement('div');
+    boite.id = 'impression';
+    boite.className = 'papier';
+    const nbPages = pages.length + (aPart ? 1 : 0);
+
+    const nouvellePage = (rangs, premiere, derniere) => {
+      const page = document.createElement('section');
+      page.className = 'page';
+      if (premiere) page.append(titre);
+      const t = document.createElement('table');
+      t.append(colgroup.cloneNode(true), thead.cloneNode(true));
+      const tb = document.createElement('tbody');
+      rangs.forEach((tr) => tb.append(tr));
+      t.append(tb);
+      if (derniere) t.append(totaux);
+      page.append(t);
+      if (derniere) page.append(pied);
+      const f = blocFolio();
+      f.textContent = 'page ' + (boite.children.length + 1) + ' sur ' + nbPages;
+      page.append(f);
+      boite.append(page);
+    };
+
+    pages.forEach((rangs, i) => nouvellePage(rangs, i === 0, !aPart && i === pages.length - 1));
+    if (aPart) nouvellePage([], false, true);
+
+    mesure.remove();
     document.body.append(boite);
   }
 
   function nettoyerImpression() {
     const ancien = $('impression');
     if (ancien) ancien.remove();
+    const m = $('mesure');
+    if (m) m.remove();
   }
 
   $('export-pdf').addEventListener('click', () => {
     if (!data) return;
+    nettoyerImpression();
     preparerImpression();
     window.print();
   });

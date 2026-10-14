@@ -403,7 +403,7 @@
       <section class="sec">
         <div class="sec-h">
           <h2>Remboursements</h2>
-          <p>Ce qui est déjà revenu, et ce que les durées annoncées laissent attendre. Les trois horizons sont cumulatifs — « d’ici 12 mois » comprend les six premiers — et incluent le capital dont l’échéance est déjà passée.</p>
+          <p>Les trois chiffres du haut disent ce qui est <b>déjà revenu</b> ; le tableau, ce qui <b>ne l’est pas encore</b> et quand les durées annoncées le promettent. Les horizons sont cumulatifs — « d’ici 12 mois » comprend les six premiers — et comprennent le capital dont l’échéance est passée sans qu’il soit rendu.</p>
         </div>
         <div class="card">
           <div class="ledger ledger-in">
@@ -414,7 +414,7 @@
           <div class="twrap">
             <table class="t" id="t-echeances">
               <thead><tr>
-                <th>Échéance</th><th>Capital attendu</th>
+                <th>Échéance</th><th>Reste à rendre</th>
                 <th>Projets</th><th>Part du capital investi</th>
               </tr></thead>
               <tbody></tbody>
@@ -457,7 +457,7 @@
             <div class="chart" id="c-top" style="min-height:320px"></div>
           </div>
           <div class="card">
-            <div class="card-h"><h3>TRI selon la durée de détention</h3><span>Un point par projet ; la taille marque le capital placé</span></div>
+            <div class="card-h"><h3>TRI selon la durée du projet</h3><span>Un point par projet ; la taille marque le capital placé</span></div>
             <div class="chart" id="c-tri" style="min-height:320px"></div>
             <div class="legend" id="l-tri"></div>
           </div>
@@ -1548,16 +1548,23 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const el = $('c-tri');
     if (!el || !data) return;
     const card = el.closest('.card');
-    const rows = data.projets.filter((p) => p.tri !== null && p.tri !== '' && p.tri !== undefined);
+    /* En abscisse, la durée annoncée du projet et non le temps déjà écoulé :
+       un projet de 12 mois détenu depuis 3 mois se range avec les projets courts,
+       ce qui donne la forme du portefeuille plutôt que son avancement. */
+    const tous = projetsEnrichis();
+    const avecTri = tous.filter((p) => p.tri !== null && p.tri !== '' && p.tri !== undefined);
+    const rows = avecTri.filter((p) => p.duree !== null);
     const W = Math.max(300, el.clientWidth || 520), H = Math.max(300, Math.min(380, W * 0.62));
     const svg = mkSvg(el, W, H);
-    const nb = data.projets.length - rows.length;
+    const sansTri = tous.length - avecTri.length;
+    const sansDuree = avecTri.length - rows.length;
     legend('l-tri', [{ c: 'var(--s1)', t: 'En cours' }, { c: 'var(--s2)', t: 'Remboursé' }]
-      .concat(nb ? [{ c: 'var(--grid)', t: num(nb) + ' projets trop récents, sans TRI calculable' }] : []));
+      .concat(sansTri ? [{ c: 'var(--grid)', t: num(sansTri) + ' projets trop récents, sans TRI calculable' }] : [])
+      .concat(sansDuree ? [{ c: 'var(--grid)', t: num(sansDuree) + ' projets sans durée dans projets.json' }] : []));
     if (!rows.length) return;
     const ext = d3.extent(rows, (r) => r.tri);
     const m = { t: 10, r: 12, b: 36, l: tw(svg, d3.ticks(Math.min(0, ext[0]), ext[1], 5).map(pct1), 10.5) + 10 };
-    const x = d3.scaleLinear([0, (d3.max(rows, (r) => r.jours_detention) || 1) * 1.02], [m.l, W - m.r]);
+    const x = d3.scaleLinear([0, (d3.max(rows, (r) => r.duree) || 1) * 1.04], [m.l, W - m.r]);
     const y = d3.scaleLinear([Math.min(0, ext[0]), ext[1]], [H - m.b, m.t]).nice();
     const rr = d3.scaleSqrt([0, d3.max(rows, (r) => r.investi) || 1], [3, 14]);
     grid(svg, y, m.l, W - m.r);
@@ -1566,14 +1573,15 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     svg.append('g').attr('transform', `translate(${m.l},0)`)
       .call(d3.axisLeft(y).ticks(5).tickFormat(pct1).tickSizeOuter(0)).call(axis);
     svg.append('text').attr('x', (m.l + W - m.r) / 2).attr('y', H - 4).attr('text-anchor', 'middle')
-      .attr('font-size', 10.5).style('fill', 'var(--muted)').text('Jours depuis le premier achat');
+      .attr('font-size', 10.5).style('fill', 'var(--muted)').text('Durée annoncée du projet, en mois');
     const tip = tipOf(card);
     svg.append('g').selectAll('circle').data(rows).join('circle')
-      .attr('cx', (d) => x(d.jours_detention)).attr('cy', (d) => y(d.tri)).attr('r', (d) => rr(d.investi))
+      .attr('cx', (d) => x(d.duree)).attr('cy', (d) => y(d.tri)).attr('r', (d) => rr(d.investi))
       .style('fill', (d) => (d.statut === 'Remboursé' ? 'var(--s2)' : 'var(--s1)')).attr('fill-opacity', .5)
       .style('stroke', (d) => (d.statut === 'Remboursé' ? 'var(--s2)' : 'var(--s1)'))
       .on('mousemove', (ev, d) => tipShow(tip, card, ev, d.projet, [
         { c: d.statut === 'Remboursé' ? 'var(--s2)' : 'var(--s1)', t: 'TRI · ' + pct(d.tri) },
+        { t: 'Durée · ' + num(d.duree) + ' mois' },
         { t: 'Placé · ' + eur(d.investi) }, { t: 'Revenus · ' + eur2(d.revenus) },
         { t: 'Détenu · ' + num(d.jours_detention) + ' jours' }
       ]))
@@ -1607,7 +1615,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       if (r.ok) refFichier = (await r.json()) || {};
     } catch (e) { /* pas de fichier de référence : cas normal */ }
     fusionnerReference();
-    if (data) { if (TS['t-projets']) TS['t-projets'].draw(); majCouverture(); majRemboursements(); }
+    /* Le fichier arrive après le premier rendu : tout ce qui en dépend se refait,
+       graphiques compris — le nuage des TRI est désormais classé sur la durée. */
+    if (data) {
+      if (TS['t-projets']) TS['t-projets'].draw();
+      majCouverture();
+      majRemboursements();
+      redraw();
+    }
   }
 
   /* Les projets, enrichis de ce que le fichier de référence permet de déduire :

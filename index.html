@@ -184,6 +184,48 @@
   table.t td .manque { color: var(--muted); font-size: .76rem; white-space: nowrap; }
   .sec-h code { font-family: var(--num); font-size: .9em; }
 
+  /* ---------- impression ----------
+     Le tableau part sur le papier dans un document à lui, construit au moment
+     de l'export : l'interface sombre, les onglets et les filtres n'ont rien à
+     y faire, et l'encre non plus. */
+  #impression { display: none; }
+
+  @media print {
+    @page { size: A4 landscape; margin: 9mm 10mm 12mm; }
+
+    html, body { background: #fff !important; }
+    /* Toute l'interface vit dans .app : la masquer suffit à ne laisser que le
+       document d'export, infobulles comprises. */
+    body > .app { display: none !important; }
+
+    #impression { display: block !important; color: #000;
+        font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 7.4pt; line-height: 1.3; }
+    #impression .titre { font-family: 'Newsreader', Georgia, serif; font-size: 15pt;
+        font-weight: 400; margin: 0 0 2mm; }
+    #impression .chapeau { margin: 0 0 4mm; font-size: 7.6pt; color: #444; }
+    #impression .chapeau b { color: #000; font-weight: 600; }
+
+    #impression table { width: 100%; border-collapse: collapse; }
+    #impression th, #impression td { text-align: right; padding: 1.1mm 1.6mm;
+        border-bottom: .2pt solid #ccc; white-space: nowrap;
+        font-variant-numeric: tabular-nums; }
+    #impression thead th { border-bottom: .6pt solid #333; font-weight: 600;
+        font-size: 7pt; color: #000; }
+    /* L'en-tête se répète en haut de chaque page, et aucune ligne n'est coupée. */
+    #impression thead { display: table-header-group; }
+    #impression tr { break-inside: avoid; page-break-inside: avoid; }
+    #impression .nom { text-align: left; white-space: normal; }
+    #impression .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 6.9pt; }
+    #impression .manque { color: #777; font-style: italic; }
+    #impression .neg { color: #000; font-weight: 600; }
+    /* Le total ne vaut que pour l'ensemble : laissé en pied de tableau, Chromium
+       le répèterait au bas de chaque page comme s'il s'agissait d'un sous-total. */
+    #impression tfoot { display: table-row-group; }
+    #impression tfoot td { border-top: .6pt solid #333; border-bottom: 0;
+        font-weight: 600; padding-top: 1.6mm; }
+    #impression .pied { margin-top: 4mm; font-size: 6.6pt; color: #555; }
+  }
+
   .total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .total-v { font-family: var(--disp); font-weight: 400; font-size: 1.5rem; line-height: 1.1;
              color: var(--figure); font-variant-numeric: tabular-nums; }
@@ -393,6 +435,10 @@
               <input type="checkbox" id="f-retard" role="switch">
               <span class="track" aria-hidden="true"><span class="thumb"></span></span>
             </label>
+            <button class="btn" type="button" id="export-pdf">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m0 0 4-4m-4 4-4-4"/><path d="M4 18v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1"/></svg>
+              Exporter
+            </button>
             <span class="count" id="n-projets"></span>
           </div>
           <div class="twrap">
@@ -1080,6 +1126,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       }
       const total = rows.length;
       if (o.limit) rows = rows.slice(0, o.limit);
+      /* Ce que le tableau montre vraiment, pour qui veut l'exporter ou le totaliser
+         sans avoir à refaire les filtres. */
+      st.lignes = rows;
+      st.cols = cols;
       tbl.querySelectorAll('thead th').forEach((th, i) => {
         if (cols[i].k === st.key) th.setAttribute('aria-sort', st.dir === 'asc' ? 'ascending' : 'descending');
         else th.removeAttribute('aria-sort');
@@ -1782,6 +1832,95 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const st = TS['t-projets'];
     if (st) { st.seulRetard = $('f-retard').checked; st.draw(); }
   });
+
+  /* ---------- export du tableau des projets ----------
+     Pas de bibliothèque PDF : le navigateur en fabrique un bien meilleur que ce
+     qu'on dessinerait à la main, avec du texte sélectionnable et l'en-tête répété
+     à chaque page. On lui donne simplement un document propre à imprimer. */
+  function phraseFiltre() {
+    const st = TS['t-projets'] || {};
+    const bouts = [];
+    if (st.filter) bouts.push('état « ' + st.filter + ' »');
+    if (st.seulRetard) bouts.push('en retard seulement');
+    if (st.q) bouts.push('nom contenant « ' + st.q + ' »');
+    return bouts.length ? bouts.join(', ') : 'aucun filtre';
+  }
+
+  function preparerImpression() {
+    if (!data) return;
+    const st = TS['t-projets'];
+    const source = $('t-projets');
+    if (!st || !source) return;
+    nettoyerImpression();
+
+    const boite = document.createElement('div');
+    boite.id = 'impression';
+
+    const titre = document.createElement('h1');
+    titre.className = 'titre';
+    titre.textContent = 'Portefeuille Bricks — tous les projets';
+    const chapeau = document.createElement('p');
+    chapeau.className = 'chapeau';
+    chapeau.innerHTML = 'Export Bricks du <b>' + dmy(data.synthese.date_export) + '</b> · <b>'
+      + num(st.lignes.length) + '</b> projet' + (st.lignes.length > 1 ? 's' : '')
+      + ' sur ' + num(data.projets.length) + ' · ' + phraseFiltre()
+      + ' · trié par ' + (st.key || 'investi') + (st.dir === 'asc' ? ' croissant' : ' décroissant');
+
+    /* Le tableau imprimé est une copie de celui affiché : mêmes lignes, mêmes
+       formats, aucun risque de divergence entre l'écran et le papier. */
+    const copie = source.cloneNode(true);
+    copie.removeAttribute('id');
+    copie.querySelectorAll('thead th').forEach((th) => {
+      const b = th.querySelector('button');
+      if (b) th.textContent = b.textContent.replace(/[↑↓]\s*$/, '').trim();
+      th.removeAttribute('aria-sort');
+    });
+    /* La barre de progression ne s'imprime pas : son étiquette chiffrée suffit. */
+    copie.querySelectorAll('.bar').forEach((b) => b.remove());
+
+    /* Totaux des seules colonnes qui s'additionnent. Un taux, une durée, un TRI
+       ou une part ne se somment pas : leur case reste vide plutôt que fausse. */
+    const SOMMES = { investi: eur, revenus_attendus: eur2, capital_rembourse: eur2, revenus: eur2 };
+    const pied = document.createElement('tfoot');
+    const tr = document.createElement('tr');
+    st.cols.forEach((c, i) => {
+      const td = document.createElement('td');
+      if (i === 0) {
+        td.textContent = 'Total';
+        td.className = 'nom';
+      } else if (SOMMES[c.k]) {
+        const s = st.lignes.reduce((a, r) => a + (+r[c.k] || 0), 0);
+        td.textContent = SOMMES[c.k](s);
+        td.className = 'cnum';
+      }
+      tr.append(td);
+    });
+    pied.append(tr);
+    copie.append(pied);
+
+    const pied2 = document.createElement('p');
+    pied2.className = 'pied';
+    pied2.textContent = 'Durée et taux annoncé proviennent de projets.json et non de l’export Bricks ; '
+      + 'les revenus attendus et l’horizon en découlent. L’horizon devient négatif passé l’échéance, '
+      + 'et reste vide sur un projet soldé. Document produit le ' + dmy(new Date().toISOString()) + '.';
+
+    boite.append(titre, chapeau, copie, pied2);
+    document.body.append(boite);
+  }
+
+  function nettoyerImpression() {
+    const ancien = $('impression');
+    if (ancien) ancien.remove();
+  }
+
+  $('export-pdf').addEventListener('click', () => {
+    if (!data) return;
+    preparerImpression();
+    window.print();
+  });
+  /* Un Cmd+P direct doit donner le même document que le bouton. */
+  window.addEventListener('beforeprint', preparerImpression);
+  window.addEventListener('afterprint', nettoyerImpression);
 
   const memoriser = (cle, valeur) => { try { localStorage.setItem(cle, valeur); } catch (e) {} };
   const segments = Array.from(document.querySelectorAll('#seg-periode button'));

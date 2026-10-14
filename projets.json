@@ -3,6 +3,10 @@
     "duree": 12,
     "taux": 11.0
   },
+  "test": {
+    "duree": 18,
+    "taux": 12.0
+  },
   "125 Appartements Denormandie Occitanie": {
     "duree": 18,
     "taux": 12.0

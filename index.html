@@ -176,6 +176,20 @@
   @media (max-width: 48rem) { .duo { grid-template-columns: 1fr; } }
   table.t td .sw { margin-right: 8px; vertical-align: baseline; }
 
+  table.t td input.mini { width: 4.6rem; font: inherit; font-size: .8rem; padding: 3px 7px; text-align: right;
+      border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); color: var(--ink);
+      font-variant-numeric: tabular-nums; }
+  table.t td input.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  table.t td input.mini:placeholder-shown { border-style: dashed; }
+  .ref-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .ref-details { margin-top: 10px; font-size: .82rem; }
+  .ref-details summary { cursor: pointer; color: var(--muted); }
+  .ref-details summary:hover { color: var(--ink); }
+  .ref-details textarea { width: 100%; margin-top: 8px; font-family: var(--num); font-size: .76rem;
+      padding: 10px; border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--panel-2); color: var(--ink); resize: vertical; }
+  .ref-details code { font-family: var(--num); font-size: .9em; }
+
   .total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .total-v { font-family: var(--disp); font-weight: 400; font-size: 1.5rem; line-height: 1.1;
              color: var(--figure); font-variant-numeric: tabular-nums; }
@@ -349,37 +363,6 @@
     </div>
 
     <div id="p-projets" role="tabpanel" aria-labelledby="tab-projets" hidden>
-      <section class="sec" id="sec-retard">
-        <div class="sec-h">
-          <h2>Versements en retard</h2>
-          <p>Projets non soldés dont le prochain versement aurait dû arriver. Le rythme attendu est celui du projet lui-même : l’écart médian entre ses versements passés, plus une tolérance d’un demi-cycle. Un projet qui paie au trimestre n’est donc pas signalé au bout d’un mois.</p>
-        </div>
-        <div class="ledger">
-          <div class="cell"><div class="cell-l">Projets en retard</div><div class="cell-v" data-f="nb_retard">—</div><div class="cell-n">sur <b data-f="nb_actifs">—</b> projets en cours</div></div>
-          <div class="cell"><div class="cell-l">Capital concerné</div><div class="cell-v" data-f="encours_retard">—</div><div class="cell-n">capital investi dans ces projets</div></div>
-          <div class="cell"><div class="cell-l">Revenus non perçus</div><div class="cell-v" data-f="manque_total">—</div><div class="cell-n">estimation au rythme habituel de chaque projet</div></div>
-          <div class="cell"><div class="cell-l">Retard le plus ancien</div><div class="cell-v" data-f="retard_max_mois">—</div><div class="cell-n" data-f="retard_max_projet">—</div></div>
-        </div>
-        <div class="card" style="margin-top:16px">
-          <div class="tools">
-            <input id="q-retard" type="search" placeholder="Filtrer par nom de projet…" aria-label="Filtrer les projets en retard">
-            <span class="count" id="n-retard"></span>
-          </div>
-          <div class="twrap" data-h="auto">
-            <table class="t" id="t-retard">
-              <thead><tr>
-                <th data-k="projet">Projet</th><th data-k="mois_retard">Mois de retard</th>
-                <th data-k="encours">Capital investi</th><th data-k="manque_a_gagner">Revenus non perçus</th>
-                <th data-k="dernier_revenu">Dernier versement</th><th data-k="cadence_jours">Rythme habituel</th>
-                <th data-k="retard_base">Mesure</th>
-              </tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <p class="count" id="note-retard"></p>
-        </div>
-      </section>
-
       <section class="sec">
         <div class="sec-h">
           <h2>Qui rapporte, qui dort</h2>
@@ -397,6 +380,45 @@
           </div>
         </div>
       </section>
+      <section class="sec" id="sec-reference">
+        <div class="sec-h">
+          <h2>Durées et taux annoncés</h2>
+          <p>L’export Bricks ne contient ni la durée ni le taux promis d’un projet. Renseignez-les ici, une fois : l’application en déduit l’échéance, le retard éventuel, et l’écart entre le rendement annoncé et celui que vous touchez réellement.</p>
+        </div>
+        <div class="card">
+          <div class="tools">
+            <input id="q-reference" type="search" placeholder="Filtrer par nom de projet…" aria-label="Filtrer les fiches">
+            <label class="switch">
+              <span class="switch-l">À renseigner seulement</span>
+              <input type="checkbox" id="f-vides" role="switch">
+              <span class="track" aria-hidden="true"><span class="thumb"></span></span>
+            </label>
+            <span class="count" id="n-reference"></span>
+          </div>
+          <p class="count" id="couverture"></p>
+          <div class="twrap">
+            <table class="t" id="t-reference">
+              <thead><tr>
+                <th data-k="projet">Projet</th><th data-k="investi">Investi</th>
+                <th data-k="duree">Durée (mois)</th><th data-k="taux">Taux annoncé</th>
+                <th data-k="echeance">Échéance estimée</th><th data-k="retard_echeance">Retard</th>
+                <th data-k="tri">TRI réel</th><th data-k="ecart">Écart</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="ref-actions">
+            <button class="btn" type="button" id="ref-copier">Copier le fichier projets.json</button>
+            <span class="count" id="ref-etat"></span>
+          </div>
+          <details class="ref-details">
+            <summary>Voir le contenu du fichier</summary>
+            <p class="count">Déposez ce texte dans un fichier <code>projets.json</code> à la racine de votre dépôt : il deviendra la base commune à tous vos appareils, et la saisie faite ici ne servira plus qu’à le compléter.</p>
+            <textarea id="ref-json" readonly rows="8" aria-label="Contenu du fichier projets.json"></textarea>
+          </details>
+        </div>
+      </section>
+
       <section class="sec">
         <div class="sec-h"><h2>Tous les projets</h2><p>Cliquez un en-tête pour trier, tapez pour filtrer.</p></div>
         <div class="card">
@@ -408,6 +430,11 @@
               <option value="Partiel">Remboursement partiel</option>
               <option value="Remboursé">Remboursé</option>
             </select>
+            <label class="switch">
+              <span class="switch-l">En retard seulement</span>
+              <input type="checkbox" id="f-retard" role="switch">
+              <span class="track" aria-hidden="true"><span class="thumb"></span></span>
+            </label>
             <span class="count" id="n-projets"></span>
           </div>
           <div class="twrap">
@@ -416,7 +443,8 @@
                 <th data-k="projet">Projet</th><th data-k="contrat">Contrat</th><th data-k="investi">Placé</th>
                 <th data-k="capital_rembourse">Remboursé</th><th data-k="pct_rembourse">Part</th>
                 <th data-k="revenus">Revenus</th><th data-k="rendement_brut">Rdt brut</th><th data-k="tri">TRI</th>
-                <th data-k="nb_versements">Versements</th><th data-k="jours_detention">Jours</th><th data-k="statut">État</th>
+                <th data-k="nb_versements">Versements</th><th data-k="jours_detention">Jours</th>
+              <th data-k="mois_retard">Retard</th><th data-k="statut">État</th>
               </tr></thead>
               <tbody></tbody>
             </table>
@@ -436,10 +464,10 @@
           <div class="card-h"><h3>Hypothèses</h3><span>Modifiez-les pour tester un scénario</span></div>
           <div class="tools">
             <div class="seg" id="seg-horizon" role="group" aria-label="Horizon de projection">
-              <button type="button" data-h="12" aria-pressed="true">12 mois</button>
-              <button type="button" data-h="24" aria-pressed="false">24 mois</button>
-              <button type="button" data-h="36" aria-pressed="false">36 mois</button>
+              <button type="button" data-h="12" aria-pressed="true">1 an</button>
+              <button type="button" data-h="36" aria-pressed="false">3 ans</button>
               <button type="button" data-h="60" aria-pressed="false">5 ans</button>
+              <button type="button" data-h="120" aria-pressed="false">10 ans</button>
             </div>
           </div>
           <div class="tools">
@@ -924,6 +952,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   const pct1 = (v) => (v === null || v === undefined || v === '' ? '—' : n1.format(+v) + ' %');
   const num = (v) => (v === null || v === undefined || v === '' ? '—' : n0.format(+v));
   const dmy = (iso) => { const p = String(iso || '').slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '—'; };
+  const mois = (v) => n1.format(+v) + ' mois';
   const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
   const mLab = (d) => MOIS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
   const mFull = (s) => { const d = new Date(s + '-01T00:00:00Z'); return MOIS[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
@@ -1026,9 +1055,6 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
         ? num(nr) + (nr > 1 ? ' projets concernés, ' : ' projet concerné, ') + eur(data.synthese.encours_retard) + ' de capital'
         : 'Aucun projet en retard de versement';
       $('note-vigilance').textContent = nr > 5 ? 'Les ' + num(nr) + ' projets sont détaillés dans l’onglet Projets.' : '';
-      $('note-retard').textContent = nr
-        ? 'Les revenus non perçus sont une estimation au rythme habituel de chaque projet, pas un montant dû par Bricks.'
-        : 'Aucun projet en retard : chaque projet non soldé a versé dans le délai attendu.';
       $('sub-capital').textContent = 'À la fin de chaque mois, depuis ' + mFull(data.synthese.premier_investissement.slice(0, 7));
       $('seg-ytd').textContent = (data.synthese.date_export || '').slice(0, 4) || 'Année';
       /* un champ number n'accepte que le point décimal */
@@ -1069,6 +1095,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
         rows = rows.filter((r) => cols.some((c) => B.norm(r[c.k]).includes(q)));
       }
       if (st.filter && o.filterKey) rows = rows.filter((r) => String(r[o.filterKey]) === st.filter);
+      if (st.seulRetard) rows = rows.filter((r) => r.vigilance === 'Retard');
+      if (st.seulVides) rows = rows.filter((r) => r.duree === null && r.taux === null);
       const col = cols.find((c) => c.k === st.key);
       if (col) {
         const s = st.dir === 'asc' ? 1 : -1;
@@ -1091,6 +1119,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       const frag = document.createDocumentFragment();
       rows.forEach((r) => {
         const tr = document.createElement('tr');
+        if (o.key) tr.setAttribute('data-key', String(r[o.key]));
         cols.forEach((c) => {
           const td = document.createElement('td');
           if (c.num) td.className = 'cnum';
@@ -1115,6 +1144,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
             else if (v === 'Partiel') p.setAttribute('data-k', 'warn');
             p.textContent = v;
             td.append(p);
+          } else if (c.input) {
+            const inp = document.createElement('input');
+            inp.className = 'mini';
+            inp.type = 'number';
+            inp.min = '0';
+            inp.max = c.max;
+            inp.step = c.step;
+            inp.placeholder = '—';
+            inp.value = (r[c.k] === null || r[c.k] === undefined || r[c.k] === '') ? '' : String(r[c.k]);
+            inp.setAttribute('aria-label', c.aria + ' — ' + String(r[o.key]));
+            inp.addEventListener('change', () => c.onChange(String(r[o.key]), inp.value));
+            td.append(inp);
           } else {
             const raw = r[c.k];
             if (c.swatch && couleurContrat[raw]) {
@@ -1171,6 +1212,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     if (!t) { t = document.createElement('div'); t.className = 'tip'; card.append(t); }
     return t;
   }
+  /* Au doigt, aucun « mouseleave » n'arrive jamais : l'infobulle resterait ouverte.
+     On la referme donc dès qu'un appui a lieu hors d'un graphique, et au défilement. */
+  function cacherTips() {
+    document.querySelectorAll('.tip').forEach((t) => { t.style.opacity = '0'; });
+  }
+  document.addEventListener('pointerdown', (ev) => {
+    const cible = ev.target;
+    if (!(cible && cible.closest && cible.closest('.chart'))) cacherTips();
+  }, true);
+  window.addEventListener('scroll', cacherTips, { passive: true });
+
   function tipShow(tip, card, ev, title, lines) {
     tip.replaceChildren();
     const h = document.createElement('div');
@@ -1469,16 +1521,129 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
 
   const safe = (fn) => { try { fn(); } catch (e) { if (window.console) console.warn('graphique', e); } };
 
+  /* ---------- durées et taux annoncés ----------
+     Deux couches : projets.json, déposé dans le dépôt et commun à tous les appareils,
+     puis la saisie faite ici, propre à ce navigateur, qui le complète ou le corrige. */
+  const CLE_REF = 'bricks.reference.v1';
+  let refFichier = {}, refLocale = {}, baseProjets = {};
+
+  const nombreOuNull = (v) => {
+    const n = parseFloat(v);
+    return isFinite(n) && n > 0 ? n : null;
+  };
+
+  function fusionnerReference() {
+    baseProjets = {};
+    Object.keys(refFichier).forEach((k) => {
+      const e = refFichier[k] || {};
+      baseProjets[k] = { duree: nombreOuNull(e.duree), taux: nombreOuNull(e.taux) };
+    });
+    Object.keys(refLocale).forEach((k) => {
+      const e = refLocale[k] || {}, base = baseProjets[k] || { duree: null, taux: null };
+      baseProjets[k] = {
+        duree: e.duree === null || e.duree === undefined ? base.duree : nombreOuNull(e.duree),
+        taux: e.taux === null || e.taux === undefined ? base.taux : nombreOuNull(e.taux)
+      };
+    });
+  }
+
+  function enregistrerReference(projet, champ, valeur) {
+    const v = valeur === '' ? null : nombreOuNull(valeur);
+    if (!refLocale[projet]) refLocale[projet] = {};
+    refLocale[projet][champ] = v;
+    if (refLocale[projet].duree == null && refLocale[projet].taux == null) delete refLocale[projet];
+    try { localStorage.setItem(CLE_REF, JSON.stringify(refLocale)); } catch (e) {}
+    fusionnerReference();
+    majLigneReference(projet);
+    majReference();
+  }
+
+  /* Reconstruire le tableau pendant le « change » arracherait le focus du champ suivant
+     et casserait le blur en cours : on ne réécrit que les cellules déduites de la ligne. */
+  function majLigneReference(projet) {
+    const tbl = $('t-reference');
+    if (!tbl || !data) return;
+    const ligne = lignesReference().filter((r) => r.projet === projet)[0];
+    if (!ligne) return;
+    const valeurs = [
+      ligne.echeance ? dmy(ligne.echeance) : '—',
+      ligne.retard_echeance === null ? '—' : mois(ligne.retard_echeance),
+      (ligne.tri === null || ligne.tri === undefined || ligne.tri === '') ? '—' : pct(ligne.tri),
+      ligne.ecart === null ? '—' : (ligne.ecart > 0 ? '+' : '') + n2.format(ligne.ecart) + ' pt'
+    ];
+    Array.from(tbl.querySelectorAll('tbody tr')).forEach((tr) => {
+      if (tr.dataset.key !== projet) return;
+      [4, 5, 6, 7].forEach((col, i) => { if (tr.cells[col]) tr.cells[col].textContent = valeurs[i]; });
+    });
+  }
+
+  async function chargerReference() {
+    try { refLocale = JSON.parse(localStorage.getItem(CLE_REF) || '{}') || {}; } catch (e) { refLocale = {}; }
+    try {
+      const r = await fetch('projets.json', { cache: 'no-cache' });
+      if (r.ok) refFichier = (await r.json()) || {};
+    } catch (e) { /* pas de fichier de référence : cas normal */ }
+    fusionnerReference();
+    if (data) { if (TS['t-reference']) TS['t-reference'].draw(); majReference(); }
+  }
+
+  /* Une ligne enrichie : échéance déduite, retard, et écart au taux annoncé */
+  function lignesReference() {
+    if (!data) return [];
+    const asof = new Date(data.synthese.date_export + 'T00:00:00Z');
+    return data.projets.map((p) => {
+      const e = baseProjets[p.projet] || {};
+      const duree = e.duree == null ? null : e.duree;
+      const taux = e.taux == null ? null : e.taux;
+      let echeance = null, retard = null;
+      if (duree && p.premier_achat) {
+        const d = new Date(p.premier_achat + 'T00:00:00Z');
+        const fin = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + Math.round(duree), d.getUTCDate()));
+        echeance = fin.toISOString().slice(0, 10);
+        if (p.statut !== 'Remboursé' && fin < asof) retard = (asof - fin) / 86400000 / 30.44;
+      }
+      return Object.assign({}, p, {
+        duree: duree, taux: taux, echeance: echeance,
+        retard_echeance: retard === null ? null : Math.round(retard * 100) / 100,
+        ecart: (taux !== null && p.tri !== null && p.tri !== undefined) ? Math.round((p.tri - taux) * 100) / 100 : null
+      });
+    });
+  }
+
+  function majReference() {
+    if (!data) return;
+    const lignes = lignesReference();
+    const remplis = lignes.filter((r) => r.duree !== null || r.taux !== null);
+    const capital = data.projets.reduce((a, p) => a + (+p.investi || 0), 0) || 1;
+    const capitalRempli = remplis.reduce((a, p) => a + (+p.investi || 0), 0);
+    $('couverture').textContent = remplis.length
+      ? num(remplis.length) + ' projets renseignés sur ' + num(lignes.length)
+        + ', soit ' + pct1(100 * capitalRempli / capital) + ' du capital placé'
+        + (Object.keys(refFichier).length ? ' · ' + num(Object.keys(refFichier).length) + ' lus dans projets.json' : '')
+      : 'Aucun projet renseigné pour l’instant. Commencez par vos plus grosses lignes, en haut du tableau.';
+    const fichier = {};
+    lignes.filter((r) => r.duree !== null || r.taux !== null)
+      .sort((a, b) => a.projet.localeCompare(b.projet, 'fr'))
+      .forEach((r) => {
+        fichier[r.projet] = {};
+        if (r.duree !== null) fichier[r.projet].duree = r.duree;
+        if (r.taux !== null) fichier[r.projet].taux = r.taux;
+      });
+    $('ref-json').value = JSON.stringify(fichier, null, 2);
+  }
+
   /* ---------- projection ---------- */
   let horizon = 12, reinvest = true, tauxSaisi = null, apport = 0;
   try {
     const h = localStorage.getItem('bk-horizon'), r = localStorage.getItem('bk-reinvest');
     const t = localStorage.getItem('bk-taux'), ap = localStorage.getItem('bk-apport');
-    if (['12', '24', '36', '60'].includes(h)) horizon = Number(h);
+    if (['12', '36', '60', '120'].includes(h)) horizon = Number(h);
     if (r === '0') reinvest = false;
     if (t !== null && t !== '' && isFinite(+t)) tauxSaisi = +t;
     if (ap !== null && isFinite(+ap)) apport = Math.max(0, +ap);
   } catch (e) { /* stockage indisponible */ }
+
+  const libelleHorizon = (h) => (h === 12 ? '1 an' : h % 12 === 0 ? (h / 12) + ' ans' : h + ' mois');
 
   /* Référence : ce que le portefeuille a réellement servi sur les 12 derniers mois */
   function reference() {
@@ -1519,7 +1684,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const net = (v) => eur2(v);
 
     $('pj-total').textContent = net(p.cumul);
-    $('pj-total-n').textContent = 'sur ' + (horizon === 60 ? '5 ans' : horizon + ' mois');
+    $('pj-total-n').textContent = 'sur ' + libelleHorizon(horizon);
     $('pj-moyen').textContent = net(p.pts.length ? p.cumul / p.pts.length : 0);
     $('pj-actuel').textContent = net(ref.mensuelRecent || 0);
     $('pj-capital').textContent = eur(p.capitalFinal);
@@ -1629,7 +1794,6 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       { sort: 'encours' });
 
     const enRetard = () => data.projets.filter((p) => p.vigilance === 'Retard');
-    const mois = (v) => n1.format(+v) + ' mois';
     const jours = (v) => 'tous les ' + num(v) + ' j';
 
     table('t-vigilance', [
@@ -1637,25 +1801,35 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       { k: 'encours', num: true, f: eur }, { k: 'dernier_revenu', f: dmy }
     ], enRetard, { sort: 'mois_retard', limit: 5 });
 
-    table('t-retard', [
-      { k: 'projet' }, { k: 'mois_retard', num: true, f: mois }, { k: 'encours', num: true, f: eur },
-      { k: 'manque_a_gagner', num: true, f: eur2 }, { k: 'dernier_revenu', f: dmy },
-      { k: 'cadence_jours', num: true, f: jours }, { k: 'retard_base', f: (v) => MESURE[v] || v }
-    ], enRetard, { sort: 'mois_retard', countEl: 'n-retard' });
-
     table('t-projets', [
       { k: 'projet' }, { k: 'contrat', f: CL }, { k: 'investi', num: true, f: eur },
       { k: 'capital_rembourse', num: true, f: eur2 }, { k: 'pct_rembourse', num: true, bar: true },
       { k: 'revenus', num: true, f: eur2 }, { k: 'rendement_brut', num: true, f: pct }, { k: 'tri', num: true, f: pct },
-      { k: 'nb_versements', num: true, f: num }, { k: 'jours_detention', num: true, f: num }, { k: 'statut', pill: true }
+      { k: 'nb_versements', num: true, f: num }, { k: 'jours_detention', num: true, f: num },
+      { k: 'mois_retard', num: true, f: mois }, { k: 'statut', pill: true }
     ], () => data.projets, { sort: 'investi', countEl: 'n-projets', filterKey: 'statut' });
+
+    table('t-reference', [
+      { k: 'projet' }, { k: 'investi', num: true, f: eur },
+      { k: 'duree', num: true, input: true, step: '1', max: '600', aria: 'Durée en mois',
+        onChange: (projet, v) => enregistrerReference(projet, 'duree', v) },
+      { k: 'taux', num: true, input: true, step: '0.1', max: '40', aria: 'Taux annoncé en pourcent',
+        onChange: (projet, v) => enregistrerReference(projet, 'taux', v) },
+      { k: 'echeance', f: dmy }, { k: 'retard_echeance', num: true, f: mois },
+      { k: 'tri', num: true, f: pct },
+      { k: 'ecart', num: true, f: (v) => (v > 0 ? '+' : '') + n2.format(v) + ' pt' }
+    ], lignesReference, { key: 'projet', sort: 'investi', countEl: 'n-reference' });
+    majReference();
 
     table('t-ops', [
       { k: 'date', f: dmy }, { k: 'type' }, { k: 'projet' }, { k: 'contrat', f: CL },
       { k: 'montant', num: true, f: eur2, neg: true }
     ], () => txRows, { sort: 'date', countEl: 'n-ops', limit: 400 });
 
-    redraw = () => { safe(drawCapital); safe(drawRevenus); safe(drawContrats); safe(drawTop); safe(drawTri); safe(drawProjection); };
+    redraw = () => {
+      cacherTips();
+      safe(drawCapital); safe(drawRevenus); safe(drawContrats); safe(drawTop); safe(drawTri); safe(drawProjection);
+    };
     redraw();
   }
 
@@ -1668,6 +1842,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
       if (tab) tab.setAttribute('aria-selected', p === id ? 'true' : 'false');
     });
     try { localStorage.setItem('bk-tab', id); } catch (e) {}
+    cacherTips();
     redraw();
   }
   PANELS.forEach((p) => { const t = $('tab-' + p); if (t) t.addEventListener('click', () => selectTab(p)); });
@@ -1678,10 +1853,29 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     if (!i) return;
     i.addEventListener('input', () => { const st = TS[tblId]; if (st) { st[key] = i.value.trim(); st.draw(); } });
   };
+  bind('q-reference', 't-reference', 'q');
+  $('f-vides').addEventListener('change', () => {
+    const st = TS['t-reference'];
+    if (st) { st.seulVides = $('f-vides').checked; st.draw(); }
+  });
+  $('ref-copier').addEventListener('click', async () => {
+    const texte = $('ref-json').value;
+    try {
+      await navigator.clipboard.writeText(texte);
+      $('ref-etat').textContent = 'Copié. Collez-le dans projets.json, à la racine du dépôt.';
+    } catch (e) {
+      $('ref-json').select();
+      $('ref-etat').textContent = 'Copie automatique refusée par le navigateur : le texte est sélectionné, copiez-le à la main.';
+    }
+  });
+
   bind('q-projets', 't-projets', 'q');
   bind('q-ops', 't-ops', 'q');
-  bind('q-retard', 't-retard', 'q');
   $('f-projets').addEventListener('change', () => { const st = TS['t-projets']; if (st) { st.filter = $('f-projets').value; st.draw(); } });
+  $('f-retard').addEventListener('change', () => {
+    const st = TS['t-projets'];
+    if (st) { st.seulRetard = $('f-retard').checked; st.draw(); }
+  });
 
   const memoriser = (cle, valeur) => { try { localStorage.setItem(cle, valeur); } catch (e) {} };
   const segments = Array.from(document.querySelectorAll('#seg-periode button'));
@@ -1852,6 +2046,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
   $('p-reinvest').checked = reinvest;
   $('p-apport').value = String(apport);
   renderAll();
+  chargerReference();
   try {
     const t = localStorage.getItem('bk-tab');
     if (t && PANELS.includes(t)) selectTab(t);

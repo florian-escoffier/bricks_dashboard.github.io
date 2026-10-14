@@ -85,6 +85,33 @@ Les colonnes de l'export sont reconnues par leur nom, pas par leur position : un
 réordonnancement côté Bricks n'empêche pas l'import. Un type d'opération inconnu est
 ignoré et signalé nommément.
 
+## Durées et taux annoncés : `projets.json`
+
+L'export Bricks ne contient ni la durée ni le taux promis d'un projet. L'onglet **Projets**
+comporte une section où les renseigner, projet par projet. L'application en déduit
+l'échéance, le retard éventuel, et l'écart entre le taux annoncé et le rendement réellement
+servi.
+
+Ces valeurs se lisent à deux endroits, dans cet ordre :
+
+1. **`projets.json`**, à la racine du dépôt — facultatif. S'il existe, il sert de base
+   commune à tous vos appareils.
+2. **La saisie faite dans l'application**, conservée dans le navigateur, qui complète ou
+   corrige le fichier.
+
+Le bouton *Copier le fichier projets.json* produit le contenu à déposer dans le dépôt :
+
+```json
+{
+  "Commerce Chaptal": { "duree": 12, "taux": 10 },
+  "Promotion Fleurs de Cactus Cayenne": { "duree": 24, "taux": 11 }
+}
+```
+
+`duree` est en mois, `taux` en pourcentage annuel brut. La clé est le nom du projet **tel
+qu'il figure dans l'export**, au caractère près. Une fois le fichier commité, la saisie
+locale devient superflue : vous pouvez l'effacer en vidant les données du site.
+
 ## Ce que l'application calcule
 
 Capital placé, capital remboursé, capital investi restant, revenus bruts et nets, TRI

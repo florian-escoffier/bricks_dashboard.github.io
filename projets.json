@@ -1,0 +1,674 @@
+{
+  "10 appartements Royat": {
+    "duree": 12,
+    "taux": 11.0
+  },
+  "125 Appartements Denormandie Occitanie": {
+    "duree": 18,
+    "taux": 12.0
+  },
+  "25 lots quartier thermal Vichy": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "35 appartements Parc du Pilat": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Appartement Alexandre III Cannes": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Appartement Calmette Beausoleil": {
+    "duree": 15,
+    "taux": 9.0
+  },
+  "Appartement Escourche": {
+    "duree": 120,
+    "taux": 7.5
+  },
+  "Appartement Hauts du Val Claret Tignes": {
+    "duree": 48,
+    "taux": 8.5
+  },
+  "Appartement Herbouville Rouen": {
+    "duree": 6,
+    "taux": 9.0
+  },
+  "Appartement Joaquim Casimiro": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Appartement Monsaraz": {
+    "duree": 120,
+    "taux": 7.0
+  },
+  "Appartement Paris 2ᵉ": {
+    "duree": 48,
+    "taux": 6.75
+  },
+  "Appartement Triangle d'Or": {
+    "duree": 36,
+    "taux": 9.0
+  },
+  "Appartement Voltaire": {
+    "duree": 120,
+    "taux": 7.5
+  },
+  "Appartements Bandol Camas": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Appartements Jean Jaurès Sainte-Marie-aux-Chênes": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Appartements Matoury Guyane": {
+    "duree": 18,
+    "taux": 11.0
+  },
+  "Appartements Soly": {
+    "duree": 24,
+    "taux": 11.0
+  },
+  "Bastide Horizons Grimaud (Golfe de Saint-Tropez)": {
+    "duree": 20,
+    "taux": 9.0
+  },
+  "Bureaux Les Essarts Groupe Mousset-Jetransporte": {
+    "duree": 36,
+    "taux": 9.2
+  },
+  "Bureaux Vinci Pélissanne": {
+    "duree": 15,
+    "taux": 9.0
+  },
+  "Bâtiment commercial Jean Moulin Langogne": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Chalet Hameau de Flaine": {
+    "duree": 18,
+    "taux": 8.0
+  },
+  "Chalet Megève": {
+    "duree": 36,
+    "taux": 10.0
+  },
+  "Chalet Mont-Saxonnex": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Château Gamage": {
+    "duree": 30,
+    "taux": 10.0
+  },
+  "Château Saint Laurent": {
+    "duree": 48,
+    "taux": 7.0
+  },
+  "Château de Chicamour": {
+    "duree": 36,
+    "taux": 11.0
+  },
+  "Château de Vignaux - Tranche I": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Commerce Chaptal": {
+    "duree": 120,
+    "taux": 7.72
+  },
+  "Commerce Diepholz": {
+    "duree": 120,
+    "taux": 7.05
+  },
+  "Complexe logistique Les Sorinières": {
+    "duree": 36,
+    "taux": 9.0
+  },
+  "Division Blanquefort": {
+    "duree": 7,
+    "taux": 10.0
+  },
+  "Division Brignais Saint-Genis-Laval": {
+    "duree": 6,
+    "taux": 9.0
+  },
+  "Division Frais Vallon Marseille 13e": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Gustave Courbet Vénissieux": {
+    "duree": 6,
+    "taux": 9.0
+  },
+  "Division Immeuble Grande Rue Dieppe": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Immeuble Ploermel": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Division Immeuble Rue Saint Malo Brest": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Impasse du Soleil Sète": {
+    "duree": 9,
+    "taux": 9.0
+  },
+  "Division Johann Strauss Vénissieux": {
+    "duree": 6,
+    "taux": 9.0
+  },
+  "Division Maison Aigrettes Montpellier": {
+    "duree": 9,
+    "taux": 9.0
+  },
+  "Division Maison Bosserville Saulxures-lès-Nancy": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Maison Ch. du Bon Civet Aubagne": {
+    "duree": 6,
+    "taux": 9.0
+  },
+  "Division Maison Chemin du Grillou Tournefeuille": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Maison Lichard Aucamville": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Maison Maurice Jouet": {
+    "duree": 9,
+    "taux": 10.0
+  },
+  "Division Montée d'Eoures Marseille": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Division Richard Simon Dieppe": {
+    "duree": 8,
+    "taux": 9.0
+  },
+  "Division Saint-Georges-d’Orques": {
+    "duree": 8,
+    "taux": 9.0
+  },
+  "Division Sanary-sur-Mer": {
+    "duree": 24,
+    "taux": 11.0
+  },
+  "Division Taillerie Royat": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Division Terrain Montmeyan": {
+    "duree": 6,
+    "taux": 10.0
+  },
+  "Division foncière Malroy": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Domaine Saint-François": {
+    "duree": 36,
+    "taux": 9.0
+  },
+  "Domaine équestre St-Martial-d'Artenset": {
+    "duree": 18,
+    "taux": 10.0
+  },
+  "EURALIS - Bâtiments CIBUS et RIE/DSI": {
+    "duree": 42,
+    "taux": 9.0
+  },
+  "EURALIS - Bâtiments Tellus": {
+    "duree": 42,
+    "taux": 9.0
+  },
+  "Ensemble Amelie-les-Bains-Palalda": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Ensemble Immobilier Jassans-Riottier": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Entrepôt Bailleul": {
+    "duree": 1,
+    "taux": 9.0
+  },
+  "Entrepôt Bernay": {
+    "duree": 7,
+    "taux": 9.0
+  },
+  "Fitness Park Aveiro 🇵🇹": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Fitness Park Espagne 🇪🇸": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Fitness Park Tudela 🇪🇸": {
+    "duree": 36,
+    "taux": 9.0
+  },
+  "Fitness Park Villanueva 🇪🇸": {
+    "duree": 36,
+    "taux": 10.0
+  },
+  "Golféa Bordeaux/Mérignac - Tranche I": {
+    "duree": 24,
+    "taux": 11.0
+  },
+  "Golféa Bordeaux/Mérignac - Tranche II": {
+    "duree": 24,
+    "taux": 8.0
+  },
+  "Grand Hôtel Médicis La Bourboule": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Groupe Faubourg I - Carrosserie Melun": {
+    "duree": 24,
+    "taux": 11.0
+  },
+  "Groupe Faubourg II - Carrosserie Troyes": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Hôtel 4 Théoule sur mer - Tranche II": {
+    "duree": 24,
+    "taux": 12.0
+  },
+  "Hôtel Bastide des Oliviers Monflanquin": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Hôtel Bordeaux Lormont": {
+    "duree": 48,
+    "taux": 9.0
+  },
+  "Hôtel IHG Issy-les-Moulineaux": {
+    "duree": 36,
+    "taux": 10.0
+  },
+  "Hôtel Paris Panthéon": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Hôtel Paris Quintinie Paris 15": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Hôtel Villa Claudia Cannes": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Hôtels Saint Witz": {
+    "duree": 36,
+    "taux": 12.0
+  },
+  "IMMO3 II - Immeubles Campans": {
+    "duree": 24,
+    "taux": 12.0
+  },
+  "Immeuble Bidart Choko Gochoa": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Immeuble Bordeaux Leblanc": {
+    "duree": 12,
+    "taux": 11.0
+  },
+  "Immeuble Boulevard Rodin Issy-les-Moulineaux": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Capitaine Ferrand": {
+    "duree": 120,
+    "taux": 8.63
+  },
+  "Immeuble Chacundier Manosque": {
+    "duree": 12,
+    "taux": 8.0
+  },
+  "Immeuble Croix Baragnon": {
+    "duree": 18,
+    "taux": 11.0
+  },
+  "Immeuble Croix Blanche Villars-les-Dombes": {
+    "duree": 3,
+    "taux": 9.0
+  },
+  "Immeuble Denormandie Mâcon Pasteur": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Desmarquets Dieppe": {
+    "duree": 8,
+    "taux": 9.0
+  },
+  "Immeuble Eugène Cuenot Marseille": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Falaise": {
+    "duree": 18,
+    "taux": 10.0
+  },
+  "Immeuble Foch Béziers": {
+    "duree": 7,
+    "taux": 9.0
+  },
+  "Immeuble Fortia Marseille": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Georges Clemenceau Bordeaux": {
+    "duree": 8,
+    "taux": 9.0
+  },
+  "Immeuble Grands Coteaux Le Cellier": {
+    "duree": 36,
+    "taux": 10.0
+  },
+  "Immeuble Henri Martin Vanves": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Jean Jaurès Lomme": {
+    "duree": 120,
+    "taux": 8.3
+  },
+  "Immeuble La Granière": {
+    "duree": 18,
+    "taux": 10.0
+  },
+  "Immeuble Lamennais Agen": {
+    "duree": 8,
+    "taux": 9.0
+  },
+  "Immeuble Maréchal Foch Vichy": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Pellegrine Aigues-Vives": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Immeuble Place de la Liberté Toulon": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Polonceau Paris": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Rodin": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Immeuble Rue Lauzin Paris": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Saint Maur Gallieni": {
+    "duree": 6,
+    "taux": 11.0
+  },
+  "Immeuble Salomon de Rothschild Suresnes": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Immeuble St Paul Île de La Réunion": {
+    "duree": 15,
+    "taux": 12.0
+  },
+  "Immeuble Timone Marseille": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Immeuble Vic-en-Bigorre": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Immeubles Denormandie suite": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "La Chapelle Joyeuse Rouen": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "La Murisserie - Salle Evènementielle 2": {
+    "duree": 36,
+    "taux": 10.5
+  },
+  "Le Bernascon Aix-les-Bains": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Le Clos Casimir Béziers": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Les Cabanes Parisiennes": {
+    "duree": 120,
+    "taux": 7.0
+  },
+  "Liberty Plaza Luxembourg-Ville": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Local Commercial Carrefour Le Mans": {
+    "duree": 48,
+    "taux": 9.0
+  },
+  "Local Verdun Suresnes": {
+    "duree": 36,
+    "taux": 9.0
+  },
+  "Locaux Triangle d'Or Deauville": {
+    "duree": 12,
+    "taux": 11.0
+  },
+  "Locaux commerciaux Avenue Victor Hugo Paris 16": {
+    "duree": 24,
+    "taux": 8.0
+  },
+  "Lot de 2 Appartements Charles de Gaulle": {
+    "duree": 60,
+    "taux": 9.0
+  },
+  "Lotissement Tiefenbach Colmar": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Maison Arpajon Cerny": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison Byblos St Tropez": {
+    "duree": 18,
+    "taux": 11.0
+  },
+  "Maison Chateaudun Amiens": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison Fourqueux Saint-Germain": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Maison La Garde": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Maison Nicéphore Niepce Saint-Étienne": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison Périnot Bordeaux": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison Saint-Avé": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison Ternay": {
+    "duree": 6,
+    "taux": 10.0
+  },
+  "Maison d'architecte Les Lilas Bruguières": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison des Azalées Montpellier": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Maison et terrain Vendays-Montalivet": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maison jumelées Clergeon Moye": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Maisons Lac Maubuisson": {
+    "duree": 14,
+    "taux": 11.0
+  },
+  "Manoir Erdeven": {
+    "duree": 24,
+    "taux": 11.0
+  },
+  "Mas Route de Lourmarin Bonnieux (Luberon)": {
+    "duree": 24,
+    "taux": 8.0
+  },
+  "Parc activité Pointe d’Abeau": {
+    "duree": 18,
+    "taux": 10.0
+  },
+  "Parc de locaux Bessan": {
+    "duree": 18,
+    "taux": 12.0
+  },
+  "Parc de locaux Saint Jory": {
+    "duree": 18,
+    "taux": 11.0
+  },
+  "Parking Belleville Paris 19": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Portefeuille hôtels sociaux": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Promotion Fleurs de Cactus Cayenne": {
+    "duree": 24,
+    "taux": 11.0
+  },
+  "Propriété Vétraz-Monthoux": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Résidence Aïden Guyane française": {
+    "duree": 18,
+    "taux": 10.0
+  },
+  "Résidence Sainte-Marthe Marseille 14": {
+    "duree": 18,
+    "taux": 10.0
+  },
+  "Résidence hôtelière 4★ Blagnac": {
+    "duree": 60,
+    "taux": 9.0
+  },
+  "Résidence étudiante Basse-Terre": {
+    "duree": 72,
+    "taux": 9.5
+  },
+  "Supernova II - Lot de 2 appartements": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Terre de Lis": {
+    "duree": 24,
+    "taux": 9.0
+  },
+  "Tuba Club Marseille": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Usine pharmaceutique Braga 🇵🇹": {
+    "duree": 24,
+    "taux": 10.0
+  },
+  "Villa Anémos Sables-d'Olonne": {
+    "duree": 18,
+    "taux": 9.5
+  },
+  "Villa Biéville Beuville": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Villa Bois Lecomte": {
+    "duree": 60,
+    "taux": 9.0
+  },
+  "Villa Cap d'Antibes": {
+    "duree": 36,
+    "taux": 11.0
+  },
+  "Villa Citadelle Six-Fours-les-Plages": {
+    "duree": 36,
+    "taux": 9.0
+  },
+  "Villa Coutoum La Teste-de-Buch (Bassin d'Arcachon)": {
+    "duree": 18,
+    "taux": 9.0
+  },
+  "Villa Grand Bleu Super Cannes": {
+    "duree": 12,
+    "taux": 10.0
+  },
+  "Villa Gypsea Saint-Barth": {
+    "duree": 36,
+    "taux": 13.0
+  },
+  "Villa Hauts Briauches": {
+    "duree": 120,
+    "taux": 9.0
+  },
+  "Villa Lurin St Barthélémy": {
+    "duree": 36,
+    "taux": 11.0
+  },
+  "Villa Plage Pampelonne": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Villa Ramatuelle Boulevard Patch": {
+    "duree": 12,
+    "taux": 9.0
+  },
+  "Villa Sainte-Maxime": {
+    "duree": 18,
+    "taux": 12.0
+  },
+  "Villas Luxe - Lac Léman": {
+    "duree": 12,
+    "taux": 10.0
+  }
+}

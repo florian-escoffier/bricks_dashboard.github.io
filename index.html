@@ -224,7 +224,7 @@
   #mesure { position: absolute; left: -20000px; top: 0; visibility: hidden; }
 
   @media print {
-    @page { size: A4 landscape; margin: 9mm 10mm 12mm; }
+    @page { size: A4 landscape; margin: 8mm; }
 
     html, body { background: #fff !important; }
     /* Toute l'interface vit dans .app : la masquer suffit à ne laisser que le
@@ -1853,8 +1853,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
      On mesure donc le tableau hors écran, on le découpe en pages, et chaque page
      reçoit son propre tableau complet. */
 
-  /* A4 paysage, marges déduites : la surface réellement imprimable. */
-  const PAPIER = { largeur: 277, hauteur: 189, garde: 4 };
+  /* Surface de travail, délibérément plus petite qu'une A4 paysage.
+     Safari ignore la règle @page et impose ses propres marges — relevées à
+     environ 14 mm sur les côtés et 19 mm en haut, soit 269 x 171 mm utiles.
+     Le document est taillé pour cette page-là : il tient alors partout, au prix
+     d'un peu de blanc chez les navigateurs plus généreux. */
+  const PAPIER = { largeur: 265, hauteur: 171, garde: 6 };
 
   /* Convertit des millimètres en pixels de mise en page, en interrogeant le
      navigateur plutôt qu'en appliquant une constante. */
@@ -2013,6 +2017,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BRICKS;
     const boite = document.createElement('div');
     boite.id = 'impression';
     boite.className = 'papier';
+    /* Même largeur que l'exemplaire de mesure, sans quoi le document imprimé
+       prendrait celle de la fenêtre : sur un téléphone, les lignes se replient
+       bien davantage et les hauteurs calculées ne décrivent plus rien. Safari
+       ramène ensuite l'ensemble à la largeur du papier. */
+    boite.style.width = PAPIER.largeur + 'mm';
+    boite.style.margin = '0 auto';
     const nbPages = pages.length + (aPart ? 1 : 0);
 
     const nouvellePage = (rangs, premiere, derniere) => {
